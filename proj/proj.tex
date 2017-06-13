@@ -1,0 +1,81 @@
+\NeedsTeXFormat{LaTeX2e}
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{booktabs}
+\usepackage{setspace}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{epsfig}
+
+\usepackage{marvosym}
+
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{multicol}
+\usepackage{etoolbox}
+
+\setlength{\textheight}{9in}
+\setlength{\textwidth}{6in}
+\setlength{\oddsidemargin}{.25in}
+\setlength{\topmargin}{-.5in} 
+
+\patchcmd{\thebibliography}{\section*{\refname}}
+    {\begin{multicols}{2}[\section*{\refname}\singlespace\footnotesize]}{}{}
+\patchcmd{\endthebibliography}{\endlist}{\endlist\end{multicols}}{}{}
+
+\hyphenation{itself}
+
+\title{{\small 02935 Introduction to applied statistics and R for PhD students: }\\[1em]Project report: Weather and travel demand}
+\author{Niklas Christoffer Petersen}
+
+\begin{document}
+
+
+\singlespace
+\maketitle
+
+\onehalfspacing
+
+\section{Background}\label{ch:background}
+
+
+Observing and predicting the demand for bus travel is of major impact for designing and operating an efficient public transport system in any urban area. It is a common understanding, that there are several external factors that impact the travel demand. Examples include weather, events, etc. It is however uncertain how much each factor really contributes to fluctuation in travel demand. 
+
+\subsection{Related work}\label{ch:relatedWork}
+The impact of weather conditions on transport is a well-studied area within the scientific field of transport modeling.
+TODO
+\clearpage
+
+\section{Data acquisition and preparation}\label{ch:data}
+As established earlier, the goal of this project is to shed light upon the impact of specifically weather as an external factor for bus travel demand. For this, the following data sets should be obtained and prepared: 
+\begin{itemize}
+    \item Travel demand data from the Danish national smart-card ticketing system, \emph{Rejsekort}, which is installed in every vehicle, and/or the camera-based \emph{automatic people counting} (APC) systems that are installed in a subset of vehicles. 
+    \item Historical weather data from \emph{Weather Underground}\footnote{https://www.wunderground.com/}. %Impacting variables include temperature, precipitation of rain/snow, wind speed and/or humidity.
+\end{itemize}
+
+\subsection{Historical weather data}\label{ch:data_weather}
+Historical weather data are unfortunately often still considered an asset, and therefore rarely public accessible in detailed granularity. Even though the Danish government has opened a lot of public data, and made them accessible for free use, data from the Danish Meteorological Institute (DMI) is still not freely available.
+
+\emph{Weather Underground}\footnote{https://www.wunderground.com/} provides world covering weather forecasts and therefore has huge amount of historical weather data. They have an API, which also includes a free student/research plan, which gives (limited) access to historical weather data.
+%but the plan does unfortunately not give access to their historical weather data either. 
+%Historic tables are though available on their 
+A small \emph{Python} script was written to scrap the API for 6 months of historical weather data between October 2017 and March 2017.
+
+\section{Problem and Data}\label{ch:data_old}
+This project aims to shed light upon the impact of specifically weather as an external factor for bus travel demand. The goal is to visualize and understand the data described in the following, and to show if any significant correlations between the datasets exists. Finally an simple model for travel demand prediction should be build in R.
+
+\begin{itemize}
+    \item The Danish national smart-card ticketing system, \emph{Rejsekort}, which is installed in every vehicle, and/or the camera-based \emph{automatic people counting} (APC) systems that are installed in a subset of vehicles. Both systems can be seen as a source for the actual travel demand (e.g. passengers boardings).
+    \item Historic weather data from either \emph{OpenWeatherMap}\footnote{https://openweathermap.org/} or \emph{Weather Underground}\footnote{https://www.wunderground.com/}. Impacting variables include temperature, precipitation of rain/snow, wind speed and/or humidity.
+\end{itemize}
+
+For the sake of simplicity the analysis is expected to be limited to a single geographical area (e.g. Copenhagen) and bus line.
+
+\begin{spacing}{1}
+  \bibliographystyle{ieeetr}
+  \bibliography{../references/library}
+\end{spacing}
+
+\end{document}
