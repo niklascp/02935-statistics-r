@@ -2,6 +2,7 @@ library(readr)
 library(data.table)
 
 library(ggplot2)
+library(plotly)
 
 weather <- read_csv("../data/EKCH.csv", na = c("", "N/A", "-", " "), col_types = list(
   TimeCEST = col_skip()
@@ -48,16 +49,52 @@ ggplot(data_clean, aes(DateTime, TemperatureC)) +
   #facet_grid(MonthAbbr ~ ., scales = "free_y")
 
 
-travelcard <- read_delim("C:/Development/02935-statistics-r/data/travelcard.csv", ";")
+travelcard <- read_delim("C:/Development/02935-statistics-r/data/travelcard_2.csv", ";")
+travelcard$DayOfWeek <- factor(travelcard$DayOfWeek)
+travelcard$Hour <- factor(travelcard$Hour)
 setDT(travelcard)
 
-b <- travelcard[,list(CheckInCount = sum(CheckInCount)), by = list(Date, DayOfWeek)]
-ggplot(b, aes(Date, CheckInCount)) +
+travelcard_by_day <- travelcard[, list(CheckInCount = sum(CheckInCount)), by = list(Date, DayOfWeek)]
+
+ggplot(travelcard_by_day, aes(Date, CheckInCount)) +
   geom_line() 
 
+travelcard['2017-02-06' <= Date & Date <= '2017-02-12']
 
-travelcard_poi <- travelcard[('2017-03-01' < Date) & (Date <= '2017-03-31')]
-a <- travelcard_poi[,list(CheckInCount = sum(CheckInCount)), by = list(Date, DayOfWeek)]
+travelcard[, list(HourCount = .N), by = list(Date, DayOfWeek)][HourCount != 24]
 
-ggplot(a, aes(Date, CheckInCount)) +
+### FIT
+
+fit <- lm(CheckInCount ~ DayOfWeek + Hour, data = travelcard)
+summary(fit)
+
+par(mfrow=c(2, 2))
+plot(fit, which=1:4)
+
+travelcard_pred <- travelcard
+travelcard_pred$Pred <- predict(fit, newdata = travelcard)
+travelcard_pred$Error = travelcard_pred$CheckInCount - travelcard_pred$Pred 
+
+travelcard_pred_by_day <- travelcard_pred[, list(CheckInCount = sum(CheckInCount), Pred = sum(Pred)), by = list(Date)]
+
+mean(travelcard_pred$Error)
+mean(abs(travelcard_pred$Error))
+
+
+pred2 <- df[, list(Pred = sum(Pred)), by = list(Date)]
+
+ggplot() +
+  geom_line(data = b2, aes(Date, CheckInCount)) +
+  geom_line(data = pred2, aes(Date, Pred), color = 'red') 
+
+b3 <- b2
+b3$Diff <- b3$CheckInCount - pred2$Pred 
+
+p1 <- ggplot(b3, aes(Date, Diff)) +
   geom_line() 
+  
+p2 <- ggplot(weather_aggr, aes(CET, Precipitationmm))  +
+  geom_bar(stat = 'identity')
+
+ggplotly(p1)
+multiplot(p1, p2, cols=1)

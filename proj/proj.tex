@@ -2,8 +2,12 @@
 \documentclass[a4paper,11pt]{article}
 \usepackage[utf8]{inputenc}
 
-\usepackage{booktabs}
+\usepackage[affil-it]{authblk}
+
+%\usepackage{layouts}
 \usepackage{setspace}
+
+\usepackage{booktabs}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{epsfig}
@@ -15,6 +19,10 @@
 \usepackage{subcaption}
 \usepackage{multicol}
 \usepackage{etoolbox}
+
+\usepackage{todonotes}
+
+\usepackage{tikz}
 
 \setlength{\textheight}{9in}
 \setlength{\textwidth}{6in}
@@ -28,18 +36,24 @@
 \hyphenation{itself}
 
 \title{{\small 02935 Introduction to applied statistics and R for PhD students: }\\[1em]Project report: Weather and travel demand}
+
 \author{Niklas Christoffer Petersen}
+\affil{Transport Modelling, Department of Management Engineering \\ Technical University of Denmark, 2800 Kongens Lyngby, Denmark}
+
+%\affil{Trafikselskabet Movia \\ Technical University of Denmark, 2800 Kongens Lyngby, Denmark}
 
 \begin{document}
-
-
 \singlespace
 \maketitle
+\thispagestyle{empty}
+\clearpage
 
 \onehalfspacing
+\pagenumbering{arabic}
+\tableofcontents
+\clearpage
 
 \section{Background}\label{ch:background}
-
 
 Observing and predicting the demand for bus travel is of major impact for designing and operating an efficient public transport system in any urban area. It is a common understanding, that there are several external factors that impact the travel demand. Examples include weather, events, etc. It is however uncertain how much each factor really contributes to fluctuation in travel demand. 
 
@@ -49,29 +63,58 @@ TODO
 \clearpage
 
 \section{Data acquisition and preparation}\label{ch:data}
-As established earlier, the goal of this project is to shed light upon the impact of specifically weather as an external factor for bus travel demand. For this, the following data sets should be obtained and prepared: 
-\begin{itemize}
-    \item Travel demand data from the Danish national smart-card ticketing system, \emph{Rejsekort}, which is installed in every vehicle, and/or the camera-based \emph{automatic people counting} (APC) systems that are installed in a subset of vehicles. 
-    \item Historical weather data from \emph{Weather Underground}\footnote{https://www.wunderground.com/}. %Impacting variables include temperature, precipitation of rain/snow, wind speed and/or humidity.
-\end{itemize}
+As established earlier, the goal of this project is to shed light upon the impact of specifically weather as an external factor for bus travel demand. For this, both historical weather data, and measures of historical travel demand should be obtained and prepared.
 
 \subsection{Historical weather data}\label{ch:data_weather}
 Historical weather data are unfortunately often still considered an asset, and therefore rarely public accessible in detailed granularity. Even though the Danish government has opened a lot of public data, and made them accessible for free use, data from the Danish Meteorological Institute (DMI) is still not freely available.
 
-\emph{Weather Underground}\footnote{https://www.wunderground.com/} provides world covering weather forecasts and therefore has huge amount of historical weather data. They have an API, which also includes a free student/research plan, which gives (limited) access to historical weather data.
-%but the plan does unfortunately not give access to their historical weather data either. 
-%Historic tables are though available on their 
-A small \emph{Python} script was written to scrap the API for 6 months of historical weather data between October 2017 and March 2017.
+\emph{Weather Underground}\footnote{https://www.wunderground.com/} provides world covering weather forecasts and therefore has huge amount of historical weather data. They have an API, which also includes a free student/research plan, which gives (limited) access to historical weather data. Because the API only allows querying for on day at a time, a small \emph{Python} script was written to scrap the API for 6 months of historical weather data between October 2017 and March 2017.
+
+\subsection{Travel demand data}\label{ch:data_traveldemand}
+Getting a appropriate measures of travel demand is a non-trivial task in itself\todo{cite?}. For this project two data sources was considered:
+\begin{itemize}
+	\item The Danish national smart-card ticketing system, \emph{Rejsekort}, which is installed in every vehicle. Boardings are recorded as passengers \emph{check in} using their smart-card.
+	\item The camera-based \emph{automatic people counting} (APC) systems that are installed in a subset of vehicles. Boardings are recorded using image analysis of cameras mounted over the doors.
+\end{itemize}
+
+Both systems has limitations though. Obviously the APC system suffers from only measuring a small sample ($<8\%$ of departures), and thus the the chance of having measurements for extreme weather conditions is reduced.
+
+On the other hand, boarding data from the Danish national smart-card ticketing system, \emph{Rejsekort}, is installed in every vehicle. But as several other ticket types are also available (Cash-tickets, Season Passes, Mobile Apps, etc.), it does not give a complete boarding measure. Compared to the sample from the APC system, the smart-card ticketing system only accounts for~$\approx 24\%$ of passenger boardings.
+
+\todo{Connect}
+
+Data from the smart-card ticketing system for the period between October 2017 and March 2017 was selected.
+
+\section{Data description}\label{ch:desc}
+
+\subsection{Travel demand data}\label{ch:desc_traveldemand}
+
+Obviously travel demand varies throughout the day, with p
+\begin{figure}[!ht]
+	\center
+	%\includegraphics{../plots/travelcard_hist.pdf}
+	\input{../plots/travelcard_boxplot.tex}
+	\caption{Passenger boardings by day of week.}
+\end{figure}
+
+more
+
+\begin{figure}[!ht]
+	\center
+	%\includegraphics{../plots/travelcard_hist.pdf}
+	\input{../plots/travelcard_hist.tex}
+	\caption{Mean passenger boardings by hour of day and day of week.}
+\end{figure}
+
+\section{Statistical analysis}
 
 \section{Problem and Data}\label{ch:data_old}
 This project aims to shed light upon the impact of specifically weather as an external factor for bus travel demand. The goal is to visualize and understand the data described in the following, and to show if any significant correlations between the datasets exists. Finally an simple model for travel demand prediction should be build in R.
 
-\begin{itemize}
-    \item The Danish national smart-card ticketing system, \emph{Rejsekort}, which is installed in every vehicle, and/or the camera-based \emph{automatic people counting} (APC) systems that are installed in a subset of vehicles. Both systems can be seen as a source for the actual travel demand (e.g. passengers boardings).
-    \item Historic weather data from either \emph{OpenWeatherMap}\footnote{https://openweathermap.org/} or \emph{Weather Underground}\footnote{https://www.wunderground.com/}. Impacting variables include temperature, precipitation of rain/snow, wind speed and/or humidity.
-\end{itemize}
-
 For the sake of simplicity the analysis is expected to be limited to a single geographical area (e.g. Copenhagen) and bus line.
+
+\subsection{Checking model assumptions}
+\todo{Check model assumptions}
 
 \begin{spacing}{1}
   \bibliographystyle{ieeetr}
