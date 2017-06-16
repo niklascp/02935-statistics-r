@@ -1,28 +1,43 @@
 library(readr)           # Reading data from files
-library(data.table)      # Succint and fficient manipulation/transformation of data
+library(data.table)      # Succint and efficient manipulation/transformation of data
 
 library(ggplot2)         # Beautiful plots
 library(tikzDevice)      # Beautiful plots in tex/tikz
+
+library(xtable)
+options(xtable.floating = FALSE)
+options(xtable.comment = FALSE)
+options(xtable.timestamp = "")
+options(xtable.hline.after = 0)
 
 # -----------------------
 # DATA LOAD AND TRANSFORM
 # -----------------------
 
-travelcard <- read_delim("../data/travelcard_2.csv", ";")
-travelcard$Day <- as.integer(travelcard$Date - min(travelcard$Date))
-travelcard$DateTime <- as.POSIXct(format(travelcard$Date)) + travelcard$Hour * 60 * 60
-travelcard$DayOfWeek <- factor(travelcard$DayOfWeek, labels = c(tail(locale()$date_names$day_ab, -1), head(locale()$date_names$day_ab, 1)))
-travelcard$Hour <- factor(travelcard$Hour)
-setDT(travelcard)
-
+travelcard <- as.data.table(read_delim("../data/travelcard_2.csv", ";"))
 travelcard <- travelcard[!(('2016-12-23' <= Date) & (Date <= '2017-01-01'))]
+travelcard$DayOfWeek <- factor(travelcard$DayOfWeek, 
+                               labels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+travelcard$Hour <- factor(travelcard$Hour)
 
 # Create plots dir (if not already exists)
-dir.create('../plots/', showWarnings = FALSE)
+dir.create('../tables/', showWarnings = FALSE)
+
+# Export example table
+travelcard_tab <- travelcard
+travelcard_tab$Date <- format(travelcard_tab$Date, format = '%Y-%m-%d')
+names(travelcard_tab) <- c('Date', 'Hour', 'Date of week', 'Check in count')
+print(xtable(head(travelcard_tab, 10)), type="latex", file="../tables/test.tex", hline.after = c(0,0:9))
+
+travelcard$Day <- as.integer(travelcard$Date - min(travelcard$Date))
+travelcard$DateTime <- as.POSIXct(format(travelcard$Date)) + travelcard$Hour * 60 * 60
 
 # -----------------
 # DESCRIPTIVE PLOTS
 # -----------------
+
+# Create plots dir (if not already exists)
+dir.create('../plots/', showWarnings = FALSE)
 
 # Line plot by hour of day and ay of week.
 p <- ggplot(travelcard, aes(DayOfWeek, CheckInCount, color = DayOfWeek)) +
