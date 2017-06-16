@@ -4,7 +4,8 @@ library(data.table)      # Succint and efficient manipulation/transformation of 
 library(ggplot2)         # Beautiful plots
 library(tikzDevice)      # Beautiful plots in tex/tikz
 
-library(xtable)
+library(xtable)          # Beautiful tables in tex
+
 options(xtable.floating = FALSE)
 options(xtable.comment = FALSE)
 options(xtable.timestamp = "")
@@ -20,7 +21,7 @@ travelcard$DayOfWeek <- factor(travelcard$DayOfWeek,
                                labels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
 travelcard$Hour <- factor(travelcard$Hour)
 
-# Create plots dir (if not already exists)
+# Ensure tables export path
 dir.create('../tables/', showWarnings = FALSE)
 
 # Export example table
@@ -36,7 +37,7 @@ travelcard$DateTime <- as.POSIXct(format(travelcard$Date)) + travelcard$Hour * 6
 # DESCRIPTIVE PLOTS
 # -----------------
 
-# Create plots dir (if not already exists)
+# Ensure tables export path
 dir.create('../plots/', showWarnings = FALSE)
 
 # Line plot by hour of day and ay of week.
@@ -51,7 +52,7 @@ p <- ggplot(travelcard, aes(DayOfWeek, CheckInCount, color = DayOfWeek)) +
   )
 p
 
-tikz(file = "../plots/travelcard_boxplot.tex", width = 6, height = 3)
+tikz(file = "../plots/travelcard_boxplot.tex", width = 6, height = 3, timestamp = FALSE)
 print(p)
 dev.off()
 
@@ -63,20 +64,30 @@ p <- ggplot(travelcard_week, aes(as.integer(Hour) - .5, Mean.CheckInCount, group
   labs(x = 'Hour of day', y = 'Passenger boardings', color = 'Day of week:') +
   scale_x_continuous(breaks = seq(0, 24), labels = head(c(rbind(seq(0, 24, by = 2), rep('', 13))), 25)) +
   theme_bw() +
-  theme(legend.position = 'bottom') + 
   theme(
-    
+    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
+    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0)),
+    legend.position = "bottom",
+    legend.title = element_text(size = rel(0.8))
   ) +
   guides(color=guide_legend(nrow=1,byrow=TRUE))
 
 p
-tikz(file = "../plots/travelcard_hist.tex", width = 6, height = 3)
+tikz(file = "../plots/travelcard_hist.tex", width = 6, height = 3, timestamp = FALSE)
 print(p)
 dev.off()
+
+
 
 # --------------------
 # STATISTICAL ANALYSIS
 # --------------------
+fit_dayofweek <- lm(CheckInCount ~ DayOfWeek, data = travelcard[DayOfWeek %in% c("Mon", "Tue", "Wed", "Thu")])
+anova(fit_dayofweek)
+
+fit_dayofweek <- lm(CheckInCount ~ DayOfWeek, data = travelcard[DayOfWeek %in% c("Mon", "Tue", "Wed", "Thu", "Fri")])
+anova(fit_dayofweek)
+
 
 fit <- lm(CheckInCount^(1/4) ~ DayOfWeek + Hour + DayOfWeek:Hour + Day, data = travelcard)
 summary(fit)
