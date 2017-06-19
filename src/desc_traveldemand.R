@@ -97,11 +97,11 @@ plot(fit, which=1:4)
 drop1(fit, test = 'F')
 
 travelcard$Pred <- predict(fit)^4
-travelcard$PredUpr <- (predict(fit, interval = 'conf')^4)[, 2]
-travelcard$PredLwr <- (predict(fit, interval = 'conf')^4)[, 3]
+travelcard$PredUpr <- (predict(fit, interval = 'pred')^4)[, 2]
+travelcard$PredLwr <- (predict(fit, interval = 'pred')^4)[, 3]
 travelcard$Error <- travelcard$CheckInCount - travelcard$Pred
-travelcard$ErrorUpr <- travelcard$PredUpr - travelcard$Pred
-travelcard$ErrorLwr <- travelcard$PredLwr - travelcard$Pred
+travelcard$ErrorUpr <- travelcard$PredLwr - travelcard$Pred
+travelcard$ErrorLwr <- travelcard$PredUpr - travelcard$Pred
   
 travelcard_week <- travelcard[('2016-10-03' <= Date) & (Date <= '2016-10-09')]
 
