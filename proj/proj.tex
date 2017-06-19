@@ -4,7 +4,7 @@
 
 \usepackage[affil-it]{authblk}
 
-%\usepackage{layouts}
+\usepackage{natbib}
 \usepackage{setspace}
 
 \usepackage{booktabs}
@@ -24,18 +24,22 @@
 
 \usepackage{tikz}
 
+%\usepackage{hyperref}
+\usepackage[nameinlink]{cleveref}
+
 \setlength{\textheight}{9in}
 \setlength{\textwidth}{6in}
 \setlength{\oddsidemargin}{.25in}
 \setlength{\topmargin}{-.5in} 
 
-\patchcmd{\thebibliography}{\section*{\refname}}
-    {\begin{multicols}{2}[\section*{\refname}\singlespace\footnotesize]}{}{}
-\patchcmd{\endthebibliography}{\endlist}{\endlist\end{multicols}}{}{}
+\setcitestyle{authoryear, open={(},close={)}}
+%\patchcmd{\thebibliography}{\section*{\refname}}
+%    {\begin{multicols}{2}[\section*{\refname}\singlespace\footnotesize]}{}{}
+%\patchcmd{\endthebibliography}{\endlist}{\endlist\end{multicols}}{}{}
 
 \hyphenation{itself}
 
-\title{{\small 02935 Introduction to applied statistics and R for PhD students: }\\[1em]Project report: Weather and travel demand}
+\title{{\small 02935 Introduction to applied statistics and R for PhD students: }\\[1em]Statistical report: Weather and travel demand}
 
 \author{Niklas Christoffer Petersen}
 \affil{Transport Modelling, Department of Management Engineering \\ Technical University of Denmark, 2800 Kongens Lyngby, Denmark}
@@ -60,6 +64,8 @@ Observing and predicting the demand for bus travel is of major impact for design
 \subsection{Related work}\label{ch:relatedWork}
 The impact of weather conditions on transport is a well-studied area within the scientific field of transport modeling.
 TODO
+
+For weather conditions, only sunny days and rainy days are considered: \citet{Yo2010}
 \clearpage
 
 \section{Data acquisition and preparation}\label{ch:data}
@@ -73,8 +79,8 @@ Historical weather data are unfortunately often still considered an asset, and t
 \subsection{Travel demand data}\label{ch:data_traveldemand}
 Getting a appropriate measures of travel demand is a non-trivial task in itself\todo{cite?}. For this project two data sources was considered:
 \begin{itemize}
-	\item The Danish national smart-card ticketing system, \emph{Rejsekort}, which is installed in every vehicle. Boardings are recorded as passengers \emph{check in} using their smart-card.
-	\item The camera-based \emph{automatic people counting} (APC) systems that are installed in a subset of vehicles. Boardings are recorded using image analysis of cameras mounted over the doors.
+    \item The Danish national smart-card ticketing system, \emph{Rejsekort}, which is installed in every vehicle. Boardings are recorded as passengers \emph{check in} using their smart-card.
+    \item The camera-based \emph{automatic people counting} (APC) systems that are installed in a subset of vehicles. Boardings are recorded using image analysis of cameras mounted over the doors.
 \end{itemize}
 
 Both systems has limitations though. Obviously the APC system suffers from only measuring a small sample ($<8\%$ of departures), and thus the the chance of having measurements for extreme weather conditions is reduced.
@@ -89,24 +95,82 @@ Data from the smart-card ticketing system for the period between October 2017 an
 
 \subsection{Travel demand data}\label{ch:desc_traveldemand}
 
-Obviously travel demand varies throughout the day, with p
+The preprocessed travel demand data is a quite simple time series containing number of passenger boardings for each date, time in terms of the hour of the day, and date of week. \Cref{tab:travel_demand_data_attr} shows the attributes in the travel demand date set, and \Cref{tab:travel_demand_data_example} shows an example of the data set.
+
+\begin{table}[!ht]
+    \center
+    \begin{tabular}{p{1in}p{4in}}        
+        Attribute & Description \\
+        \hline 
+        \hline         
+        Date & The date of the observation (2016-10-01 - 2017-03-31) \\
+        \hline 
+        Hour & The hour of the observation (0 - 23, e.g.\ hour = 0 means between 00:00 and 01:00) \\
+        \hline 
+        Date of week & The day of the week of the observation (Mon - Sat), with statutory holidays encoded as Saturdays. \\
+        \hline 
+        Check in count & Number of passenger boardings using the smart-card ticketing system. \\
+    \end{tabular}
+    \caption{Attributes in the travel demand data set.}
+    \label{tab:travel_demand_data_attr}
+\end{table}
+
+\begin{table}[!ht]
+    \center
+    %\includegraphics{../plots/travelcard_hist.pdf}
+    \input{../tables/travel_demand_data_example.tex}
+    \caption{Example of the travel demand data set.}
+    \label{tab:travel_demand_data_example}
+\end{table}
+
+
+\Cref{fig:travelcard_boxplot} shows the boxplot of passenger boardings over the different days of week, where the notches gives a roughly 95\% confidence interval for comparing medians cf.~\citet{Boxplots}. The plot suggests that travel demand of Monday--Thursday could follow quite similar distributions, while Friday, Saturday and Sunday seems to each have a distinct travel demand distribution from the rest of the week.
+
+\clearpage
 \begin{figure}[!ht]
-	\center
-	%\includegraphics{../plots/travelcard_hist.pdf}
-	\input{../plots/travelcard_boxplot.tex}
-	\caption{Passenger boardings by day of week.}
+    \center
+    %\includegraphics{../plots/travelcard_hist.pdf}
+    \input{../plots/travelcard_boxplot.tex}
+    \caption{Passenger boardings by day of week.}
+    \label{fig:travelcard_boxplot}
 \end{figure}
 
-more
+Intuitively travel demand also varies throughout the day as shown in~\Cref{fig:travelcard_hist}: On an average weekday, most passengers boardings for each hour are in the morning peek hours (7--9), and afternoon peek hours (15--18). It suggest that the weekdays seem to behave vary similar between early morning and work hours (e.g.\ 2--16), except Friday, which looks to have more demand in general. After 16 the weekdays seem to deviate from each a bit more. It also suggest that weekends has a clearly different demand pattern, with much more demand in the night hours.
 
 \begin{figure}[!ht]
-	\center
-	%\includegraphics{../plots/travelcard_hist.pdf}
-	\input{../plots/travelcard_hist.tex}
-	\caption{Mean passenger boardings by hour of day and day of week.}
+    \center
+    %\includegraphics{../plots/travelcard_hist.pdf}
+    \input{../plots/travelcard_hist.tex}
+    \caption{Mean passenger boardings by hour of day and day of week.}
+    \label{fig:travelcard_hist}
 \end{figure}
+\clearpage
+
+\subsection{Weather data}\label{ch:desc_weather}
+
+\clearpage
 
 \section{Statistical analysis}
+
+$$
+\textit{CheckInCount}^{\frac{1}{4}} \sim \textit{DayOfWeek} + \textit{Hour} + \textit{DayOfWeek}:\textit{Hour} + \textit{Day}
+$$
+
+\begin{figure}[!ht]
+    \center
+    \input{../plots/travelcard_pred.tex}
+    \caption{Predicted passenger boardings of a single week.}
+    \label{fig:travelcard_pred}
+\end{figure}
+
+\begin{figure}[!ht]
+    \center
+    \input{../plots/travelcard_error_pct.tex}
+    \caption{Error percentage of a single week.}
+    \label{fig:travelcard_error_pct}
+\end{figure}
+
+\clearpage
 
 \section{Problem and Data}\label{ch:data_old}
 This project aims to shed light upon the impact of specifically weather as an external factor for bus travel demand. The goal is to visualize and understand the data described in the following, and to show if any significant correlations between the datasets exists. Finally an simple model for travel demand prediction should be build in R.
@@ -117,7 +181,7 @@ For the sake of simplicity the analysis is expected to be limited to a single ge
 \todo{Check model assumptions}
 
 \begin{spacing}{1}
-  \bibliographystyle{ieeetr}
+  \bibliographystyle{apalike}
   \bibliography{../references/library}
 \end{spacing}
 
