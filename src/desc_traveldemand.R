@@ -28,10 +28,10 @@ dir.create('../tables/', showWarnings = FALSE)
 travelcard_tab <- travelcard
 travelcard_tab$Date <- format(travelcard_tab$Date, format = '%Y-%m-%d')
 names(travelcard_tab) <- c('Date', 'Hour', 'Date of week', 'Check in count')
-print(xtable(head(travelcard_tab, 10)), type="latex", file="../tables/test.tex", hline.after = c(0,0:9))
+print(xtable(head(travelcard_tab, 10)), type="latex", file="../tables/travel_demand_data_example.tex", hline.after = c(0,0:9))
 
 travelcard$Day <- as.integer(travelcard$Date - min(travelcard$Date))
-travelcard$DateTime <- as.POSIXct(format(travelcard$Date)) + travelcard$Hour * 60 * 60
+travelcard$DateTime <- as.POSIXct(format(travelcard$Date)) + (as.integer(travelcard$Hour) - 1) * 60 * 60
 
 # -----------------
 # DESCRIPTIVE PLOTS
@@ -88,7 +88,6 @@ anova(fit_dayofweek)
 fit_dayofweek <- lm(CheckInCount ~ DayOfWeek, data = travelcard[DayOfWeek %in% c("Mon", "Tue", "Wed", "Thu", "Fri")])
 anova(fit_dayofweek)
 
-
 fit <- lm(CheckInCount^(1/4) ~ DayOfWeek + Hour + DayOfWeek:Hour + Day, data = travelcard)
 summary(fit)
 
@@ -100,7 +99,7 @@ drop1(fit, test = 'F')
 travelcard$Pred <- predict(fit)^4
 travelcard$PredUpr <- (predict(fit, interval = 'conf')^4)[, 2]
 travelcard$PredLwr <- (predict(fit, interval = 'conf')^4)[, 3]
-travelcard$Error <- travelcard$Pred - travelcard$CheckInCount
+travelcard$Error <- travelcard$CheckInCount - travelcard$Pred
 travelcard$ErrorUpr <- travelcard$PredUpr - travelcard$Pred
 travelcard$ErrorLwr <- travelcard$PredLwr - travelcard$Pred
   
@@ -112,14 +111,32 @@ p <- ggplot(travelcard_week, aes(DateTime, CheckInCount)) +
   labs(x = 'Time', y = 'Passenger Boardings') + 
   scale_x_datetime(breaks = travelcard_week[(Hour == 12)]$DateTime, labels = travelcard_week[(Hour == 12)]$DayOfWeek) +
   theme_bw() +
-  theme(plot.title = element_text(size = rel(1), vjust = 0), 
-        axis.text.y = element_text(size = rel(0.8)),
-        axis.text.x = element_text(size = rel(0.8)),
-        axis.title = element_text(size = rel(0.8)),
-        axis.title.y = element_text( vjust=-4 ),
-        axis.title.x = element_text( vjust=-0.5 ))
+  theme(
+    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
+    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
+  )
 
 p
+
+tikz(file = "../plots/travelcard_pred.tex", width = 6, height = 3, timestamp = FALSE)
+print(p)
+dev.off()
+
+p <- ggplot(travelcard_week, aes(DateTime, Error / CheckInCount)) +
+  geom_bar(stat = 'identity', position = 'dodge') +
+  scale_x_datetime(breaks = travelcard_week[(Hour == 12)]$DateTime, labels = travelcard_week[(Hour == 12)]$DayOfWeek) +
+  theme_bw() +
+  theme(
+    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
+    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
+  )
+
+p
+
+tikz(file = "../plots/travelcard_error_pct.tex", width = 6, height = 3, timestamp = FALSE)
+print(p)
+dev.off()
+
 
 par(mfrow=c(1, 1))
 plot(travelcard[, list(RMSE = sqrt(mean(Error^2))), by = Date])
