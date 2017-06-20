@@ -1,37 +1,15 @@
-library(readr)           # Reading data from files
 library(data.table)      # Succint and efficient manipulation/transformation of data
 
 library(ggplot2)         # Beautiful plots
 library(tikzDevice)      # Beautiful plots in tex/tikz
 
-library(xtable)          # Beautiful tables in tex
+source('traveldemand.R')
 
-options(xtable.floating = FALSE)
-options(xtable.comment = FALSE)
-options(xtable.timestamp = "")
-options(xtable.hline.after = 0)
+traveldemand <- prep_traveldemand()
 
-# -----------------------
-# DATA LOAD AND TRANSFORM
-# -----------------------
+write_example_traveldemand(traveldemand)
 
-travelcard <- as.data.table(read_delim("../data/travelcard_2.csv", ";"))
-travelcard <- travelcard[!(('2016-12-23' <= Date) & (Date <= '2017-01-01'))]
-travelcard$DayOfWeek <- factor(travelcard$DayOfWeek, 
-                               labels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
-travelcard$Hour <- factor(travelcard$Hour)
-
-# Ensure tables export path
-dir.create('../tables/', showWarnings = FALSE)
-
-# Export example table
-travelcard_tab <- travelcard
-travelcard_tab$Date <- format(travelcard_tab$Date, format = '%Y-%m-%d')
-names(travelcard_tab) <- c('Date', 'Hour', 'Date of week', 'Check in count')
-print(xtable(head(travelcard_tab, 10)), type="latex", file="../tables/travel_demand_data_example.tex", hline.after = c(0,0:9))
-
-travelcard$Day <- as.integer(travelcard$Date - min(travelcard$Date))
-travelcard$DateTime <- as.POSIXct(format(travelcard$Date)) + (as.integer(travelcard$Hour) - 1) * 60 * 60
+traveldemand <- transform_traveldemand(traveldemand)
 
 # -----------------
 # DESCRIPTIVE PLOTS
@@ -122,9 +100,10 @@ tikz(file = "../plots/travelcard_pred.tex", width = 6, height = 3, timestamp = F
 print(p)
 dev.off()
 
-p <- ggplot(travelcard_week, aes(DateTime, Error / CheckInCount)) +
+p <- ggplot(travelcard_week, aes(DateTime, Error / Pred)) +
   geom_bar(stat = 'identity', position = 'dodge') +
   scale_x_datetime(breaks = travelcard_week[(Hour == 12)]$DateTime, labels = travelcard_week[(Hour == 12)]$DayOfWeek) +
+  scale_y_continuous(breaks = seq(-.75,.75, by = .25)) +
   theme_bw() +
   theme(
     axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),

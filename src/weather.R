@@ -1,100 +1,104 @@
-library(readr)
-library(data.table)
+library(readr)           # Reading data from files
+library(data.table)      # Succint and efficient manipulation/transformation of data
 
-library(ggplot2)
-library(plotly)
+library(xtable)          # Beautiful tables in tex
 
-weather <- read_csv("../data/EKCH.csv", na = c("", "N/A", "-", " "), col_types = list(
-  TimeCEST = col_skip()
-))
-setDT(weather)
+# ----------------------------------
+# UTILITY FUNCTIONS FOR WEATHER DATA
+# ----------------------------------
 
-weather_aggr <- read_csv("../data/EKCH_Aggr.csv", na = c("", "N/A", "-", " "), col_types = list(
-  CET = col_date(format = "%Y-%m-%d")
-))
-setDT(weather_aggr)
-
-weather_clean <- weather[(-25 < TemperatureC) & (TemperatureC < 35)]
-
-rain <- c(
-  'Light Rain Showers', 'Light Rain',
-  'Rain Showers', 'Rain',
-  'Heavy Rain Showers', 'Heavy Rain',
-  'Freezing Rain'
-)
-
-weather_clean$Rain <- 0
-for (r in 1:length(rain)) {
-  weather_clean[Conditions == rain[r]]$Rain = r
+rain_levels <- function() 
+{
+  c(
+    'Light Rain Showers', 'Light Rain',
+    'Rain Showers', 'Rain',
+    'Heavy Rain Showers', 'Heavy Rain',
+    'Freezing Rain')
 }
 
-weather_clean$DateTime <- as.POSIXct(format(weather_clean$DateUTC, tz="Europe/Copenhagen", usetz=TRUE))
-weather_clean$Year <- as.integer(format(weather_clean$DateTime, format = '%Y'))
-weather_clean$MonthNo <- as.integer(format(weather_clean$DateTime, format = '%m'))
-weather_clean$MonthAbbr <- factor(x = seq(1, 12), labels = locale()$date_names$mon_ab)[weather_clean$MonthNo]
-
-# Replace Precipitationmm from daily dataset.
-weather_clean <- merge(
-  weather_clean[, !"Precipitationmm", with=FALSE], 
-  weather_aggr[, list(CET, Precipitationmm)], 
-  by = "CET")
-
-ggplot(weather_aggr, aes(CET)) +
-  geom_ribbon(aes(ymin=MinTemperatureC, ymax=MaxTemperatureC), alpha = .25) +
-  geom_line(aes(y = MeanTemperatureC), color = 'magenta') 
-
-ggplot(data_clean, aes(DateTime, TemperatureC)) +
-  geom_line() 
-  geom_bar(aes(DateTime, Rain), stat = 'identity', fill = 'blue')
-  #facet_grid(MonthAbbr ~ ., scales = "free_y")
-
-
-travelcard <- read_delim("C:/Development/02935-statistics-r/data/travelcard_2.csv", ";")
-travelcard$DayOfWeek <- factor(travelcard$DayOfWeek)
-travelcard$Hour <- factor(travelcard$Hour)
-setDT(travelcard)
-
-travelcard_by_day <- travelcard[, list(CheckInCount = sum(CheckInCount)), by = list(Date, DayOfWeek)]
-
-ggplot(travelcard_by_day, aes(Date, CheckInCount)) +
-  geom_line() 
-
-travelcard['2017-02-06' <= Date & Date <= '2017-02-12']
-
-travelcard[, list(HourCount = .N), by = list(Date, DayOfWeek)][HourCount != 24]
-
-### FIT
-
-fit <- lm(CheckInCount ~ DayOfWeek + Hour, data = travelcard)
-summary(fit)
-
-par(mfrow=c(2, 2))
-plot(fit, which=1:4)
-
-travelcard_pred <- travelcard
-travelcard_pred$Pred <- predict(fit, newdata = travelcard)
-travelcard_pred$Error = travelcard_pred$CheckInCount - travelcard_pred$Pred 
-
-travelcard_pred_by_day <- travelcard_pred[, list(CheckInCount = sum(CheckInCount), Pred = sum(Pred)), by = list(Date)]
-
-mean(travelcard_pred$Error)
-mean(abs(travelcard_pred$Error))
-
-
-pred2 <- df[, list(Pred = sum(Pred)), by = list(Date)]
-
-ggplot() +
-  geom_line(data = b2, aes(Date, CheckInCount)) +
-  geom_line(data = pred2, aes(Date, Pred), color = 'red') 
-
-b3 <- b2
-b3$Diff <- b3$CheckInCount - pred2$Pred 
-
-p1 <- ggplot(b3, aes(Date, Diff)) +
-  geom_line() 
+write_example_weather <- function(weather)
+{
+  options(xtable.floating = FALSE)
+  options(xtable.comment = FALSE)
+  options(xtable.timestamp = "")
+  options(xtable.hline.after = 0)
   
-p2 <- ggplot(weather_aggr, aes(CET, Precipitationmm))  +
-  geom_bar(stat = 'identity')
+  weather_tab <- copy(weather)
+  weather_tab[, c("Date") := NULL, with=FALSE]
+  weather_tab$DateTime <- format(weather_tab$DateTime, format = '%Y-%m-%d %H:%M')
+  weather_tab$Rain <- as.factor(weather_tab$Rain)
+  colnames(weather_tab) <- c("Date/time",
+                             "Temperature",
+                             "Dew point",
+                             "Wind speed",
+                             "Gust speed",
+                             "Humidity",
+                             "Precipitation",
+                             "Rain")
+  
+  # Ensure tables export path
+  dir.create('../tables/', showWarnings = FALSE)
+  
+  # Export example table
+  print(xtable(head(weather_tab, 10)),
+        type="latex",
+        file="../tables/weather_data_example.tex",
+        hline.after = c(0,0:9),
+        include.rownames = FALSE)
+}
 
-ggplotly(p1)
-multiplot(p1, p2, cols=1)
+# -------------------------------
+# LOAD AND TRANSFORM WEATHER DATA
+# -------------------------------
+
+prep_weather <- function()
+{
+  weather <- read_csv("../data/EKCH.csv", na = c("", "N/A", "-", " "), col_types = list(
+    TimeCEST = col_skip(),
+    WindSpeedKmH = col_number(),
+    GustSpeedKmH = col_number()
+  ))
+  setDT(weather)
+  
+  weather_aggr <- read_csv("../data/EKCH_Aggr.csv", na = c("", "N/A", "-", " "), col_types = list(
+    CET = col_date(format = "%Y-%m-%d")
+  ))
+  setDT(weather_aggr)
+  
+  # Remove some unlikely measurements
+  weather_clean <- weather[(-25 < TemperatureC) & (TemperatureC < 35)]
+  
+  rain <- rain_levels()
+  weather_clean$Rain <- 0
+  for (r in 1:length(rain)) {
+    weather_clean[Conditions == rain[r]]$Rain = r
+  }
+  
+  weather_clean[, c("Events",
+                    "Conditions",
+                    "SeaLevelPressurehPa",
+                    "VisibilityKm",
+                    "WindDirection", 
+                    "WindDirDegrees",
+                    "Precipitationmm") := NULL, with=FALSE]
+  
+  # Replace Precipitationmm from daily dataset.
+  weather_clean <- merge(
+    weather_clean, 
+    weather_aggr[, list(CET, Precipitationmm)], 
+    by = "CET")
+  
+  colnames(weather_clean)[1] = "Date"
+  colnames(weather_clean)[7] = "DateTime"
+  weather_clean$DateTime <- as.POSIXct(format(weather_clean$DateTime, tz="Europe/Copenhagen", usetz=TRUE))
+  setcolorder(weather_clean, c("Date",
+                               "DateTime",
+                               "TemperatureC",
+                               "DewPointC",
+                               "WindSpeedKmH",
+                               "GustSpeedKmH",
+                               "Humidity",
+                               "Precipitationmm",
+                               "Rain"))
+  weather_clean
+}

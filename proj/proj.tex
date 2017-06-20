@@ -66,36 +66,15 @@ The impact of weather conditions on transport is a well-studied area within the 
 TODO
 
 For weather conditions, only sunny days and rainy days are considered: \citet{Yo2010}
+
 \clearpage
 
-\section{Data acquisition and preparation}\label{ch:data}
-As established earlier, the goal of this project is to shed light upon the impact of specifically weather as an external factor for bus travel demand. For this, both historical weather data, and measures of historical travel demand should be obtained and prepared.
-
-\subsection{Historical weather data}\label{ch:data_weather}
-Historical weather data are unfortunately often still considered an asset, and therefore rarely public accessible in detailed granularity. Even though the Danish government has opened a lot of public data, and made them accessible for free use, data from the Danish Meteorological Institute (DMI) is still not freely available.
-
-\emph{Weather Underground}\footnote{https://www.wunderground.com/} provides world covering weather forecasts and therefore has huge amount of historical weather data. They have an API, which also includes a free student/research plan, which gives (limited) access to historical weather data. Because the API only allows querying for on day at a time, a small \emph{Python} script was written to scrap the API for 6 months of historical weather data between October 2017 and March 2017.
-
-\subsection{Travel demand data}\label{ch:data_traveldemand}
-Getting a appropriate measures of travel demand is a non-trivial task in itself\todo{cite?}. For this project two data sources was considered:
-\begin{itemize}
-    \item The Danish national smart-card ticketing system, \emph{Rejsekort}, which is installed in every vehicle. Boardings are recorded as passengers \emph{check in} using their smart-card.
-    \item The camera-based \emph{automatic people counting} (APC) systems that are installed in a subset of vehicles. Boardings are recorded using image analysis of cameras mounted over the doors.
-\end{itemize}
-
-Both systems has limitations though. Obviously the APC system suffers from only measuring a small sample ($<8\%$ of departures), and thus the the chance of having measurements for extreme weather conditions is reduced.
-
-On the other hand, boarding data from the Danish national smart-card ticketing system, \emph{Rejsekort}, is installed in every vehicle. But as several other ticket types are also available (Cash-tickets, Season Passes, Mobile Apps, etc.), it does not give a complete boarding measure. Compared to the sample from the APC system, the smart-card ticketing system only accounts for~$\approx 24\%$ of passenger boardings.
-
-\todo{Connect}
-
-Data from the smart-card ticketing system for the period between October 2017 and March 2017 was selected.
-
 \section{Data description}\label{ch:desc}
+As established earlier, the goal of this project is to shed light upon the impact of specifically weather as an external factor for bus travel demand. For this, both historical weather data, and measures of historical travel demand should be analyzed.
 
 \subsection{Travel demand data}\label{ch:desc_traveldemand}
 
-The preprocessed travel demand data is a quite simple time series containing number of passenger boardings for each date, time in terms of the hour of the day, and date of week. \Cref{tab:travel_demand_data_attr} shows the attributes in the travel demand date set, and \Cref{tab:travel_demand_data_example} shows an example of the data set.
+Travel demand data was obtained and prepared as described in \Cref{appx:travel_demand_data_prep}. The preprocessed travel demand data is a quite simple time series containing number of passenger boardings for each date, time in terms of the hour of the day, and date of week. \Cref{tab:travel_demand_data_attr} shows the attributes in the travel demand date set, and \Cref{tab:travel_demand_data_example} shows an example of the data set.
 
 \begin{table}[!ht]
     \center
@@ -103,9 +82,9 @@ The preprocessed travel demand data is a quite simple time series containing num
         Attribute & Description \\
         \hline 
         \hline         
-        Date & The date of the observation (2016-10-01 - 2017-03-31) \\
+        Date & The date of the observation (2016-10-01 - 2017-03-31). \\
         \hline 
-        Hour & The hour of the observation (0 - 23, e.g.\ hour = 0 means between 00:00 and 01:00) \\
+        Hour & The hour of the observation (0--23, e.g.\ hour = 0 means between 00:00 and 01:00). \\
         \hline 
         Date of week & The day of the week of the observation (Mon - Sat), with statutory holidays encoded as Saturdays. \\
         \hline 
@@ -147,6 +126,55 @@ Intuitively travel demand also varies throughout the day as shown in~\Cref{fig:t
 \clearpage
 
 \subsection{Weather data}\label{ch:desc_weather}
+Historical weather data was obtained and prepared as described in \Cref{appx:weather_data_prep}. The preprocessed weather data is a more advanced time series containing several measurements for each time step. \Cref{tab:weather_data_attr} shows the attributes in the weather date set, and \Cref{tab:weather_data_example} shows an example of the data set.
+
+\begin{table}[!ht]
+    \center
+    \begin{tabular}{p{1in}p{4in}}        
+        Attribute & Description \\
+        \hline 
+        \hline 
+        Date/time & The date and time of the observation (2016-10-01 00:00 - 2017-03-31 23:50). \\
+        \hline         
+        Temperature & The measured temperature in degree Celsius. \\
+        \hline         
+        Dew point & The measured dew point in degree Celsius. Temperature below which water will begin to condense. \\
+        \hline         
+        Wind speed & The measured wind speed in kilometers per hour. \\
+        \hline         
+        Gust speed & The measured gust speed in kilometers per hour. \\
+        \hline         
+        Humidity & The measured humidity in percentage. \\
+        \hline         
+        Precipitation & The precipitation for the entire day in mm. \\
+        \hline         
+        Rain & The rain condition level at the measurement from 1 to 7: 'Light Rain Showers', 'Light Rain',
+  'Rain Showers', 'Rain',
+  'Heavy Rain Showers', 'Heavy Rain',
+  'Freezing Rain' (0 = no rain). \\
+    \end{tabular}
+    \caption{Attributes in the travel demand data set.}
+    \label{tab:weather_data_attr}
+\end{table}
+
+Notice that gust speed is only available if any sudden, brief increase in the speed of the wind followed by a lull is recorded shortly up to the measurement.
+ 
+\begin{table}[!ht]
+    \center
+    \resizebox{\linewidth}{!}{
+    \input{../tables/weather_data_example.tex}
+    }
+    \caption{Example of the weather data set.}
+    \label{tab:weather_data_example}
+\end{table}
+
+
+\begin{figure}[!ht]
+    \center
+    \input{../plots/weather_hist.tex}
+    \caption{Frequency of different levels of rain.}
+    \label{fig:weather_hist}
+\end{figure}
 
 \clearpage
 
@@ -192,7 +220,16 @@ For the sake of simplicity the analysis is expected to be limited to a single ge
 
 \begin{spacing}{1}
   \bibliographystyle{apalike}
+  \addcontentsline{toc}{section}{References}
   \bibliography{../references/library}
 \end{spacing}
+
+\appendix
+\section*{Appendices}
+\addcontentsline{toc}{section}{Appendices}
+\renewcommand{\thesubsection}{\Alph{subsection}}
+
+\input{appx_travel_demand_data.tex}
+\input{appx_weather_data.tex}
 
 \end{document}
