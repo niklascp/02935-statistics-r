@@ -7,19 +7,6 @@ library(tikzDevice)      # Beautiful plots in tex/tikz
 source('traveldemand.R')
 source('weather.R')
 
-ggQQ <- function(LM) # argument: a linear model
-{
-  y <- quantile(LM$resid[!is.na(LM$resid)], c(0.25, 0.75))
-  x <- qnorm(c(0.25, 0.75))
-  slope <- diff(y)/diff(x)
-  int <- y[1L] - slope * x[1L]
-  p <- ggplot(LM, aes(sample=.resid)) +
-    stat_qq(alpha = 0.5) +
-    geom_abline(slope = slope, intercept = int, color="blue")
-  
-  return(p)
-}
-
 # -----------------
 # GET PREPARED DATA
 # -----------------
@@ -44,8 +31,8 @@ fit <- lm(
   data = traveldemand)
 summary(fit)
 
-pdf("../plots/fit-assumptions.pdf", width=12, height=6)
-par(mfrow=c(2, 2))
+pdf("../plots/fit-assumptions.pdf", width=9, height=12)
+par(mfrow=c(4, 1))
 plot(fit, which=1:4)
 par(mfrow=c(1, 1))
 dev.off()
@@ -63,9 +50,26 @@ traveldemand$Error <- traveldemand$CheckInCount - traveldemand$Pred
 #traveldemand$ErrorLwr <- traveldemand$PredUpr - traveldemand$Pred
 traveldemand$ErrorPct <- traveldemand$Error / traveldemand$Pred
 
-ggplot(traveldemand, aes(sample=Error))+stat_qq()
+travelcard_week <- traveldemand[('2016-10-03' <= Date) & (Date <= '2016-10-09')]
 
-ggQQ(fit)
+p <- ggplot(travelcard_week, aes(DateTime, CheckInCount)) +
+  geom_bar(stat = 'identity') +
+  geom_line(aes(y = Pred), color = 'red') +
+  labs(x = 'Time', y = 'Check In Count') + 
+  scale_x_datetime(breaks = travelcard_week[(Hour == 12)]$DateTime, labels = travelcard_week[(Hour == 13)]$DayOfWeek) +
+  theme_bw() +
+  theme(
+    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
+    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
+  )
+
+p
+
+tikz(file = "../plots/travelcard_pred.tex", width = 6, height = 2.5, timestamp = FALSE)
+print(p)
+dev.off()
+
+
 
 quantiles <- quantile(traveldemand$ErrorPct, c(.05, .95))
 traveldemand$ErrorPctAdj <- traveldemand$ErrorPct

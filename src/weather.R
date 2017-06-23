@@ -69,6 +69,8 @@ prep_weather <- function()
   # Remove some unlikely measurements
   weather_clean <- weather[(-25 < TemperatureC) & (TemperatureC < 35)]
   
+  weather_clean[, .N, by = Conditions]
+  
   rain <- rain_levels()
   weather_clean$Rain <- 0
   for (r in 1:length(rain)) {
