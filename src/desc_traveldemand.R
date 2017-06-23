@@ -74,32 +74,6 @@ plot(fit, which=1:4)
 
 drop1(fit, test = 'F')
 
-travelcard$Pred <- predict(fit)^4
-travelcard$PredUpr <- (predict(fit, interval = 'pred')^4)[, 2]
-travelcard$PredLwr <- (predict(fit, interval = 'pred')^4)[, 3]
-travelcard$Error <- travelcard$CheckInCount - travelcard$Pred
-travelcard$ErrorUpr <- travelcard$PredLwr - travelcard$Pred
-travelcard$ErrorLwr <- travelcard$PredUpr - travelcard$Pred
-  
-travelcard_week <- travelcard[('2016-10-03' <= Date) & (Date <= '2016-10-09')]
-
-p <- ggplot(travelcard_week, aes(DateTime, CheckInCount)) +
-  geom_bar(stat = 'identity') +
-  geom_line(aes(y = Pred), color = 'red') +
-  labs(x = 'Time', y = 'Passenger Boardings') + 
-  scale_x_datetime(breaks = travelcard_week[(Hour == 12)]$DateTime, labels = travelcard_week[(Hour == 12)]$DayOfWeek) +
-  theme_bw() +
-  theme(
-    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
-    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
-  )
-
-p
-
-tikz(file = "../plots/travelcard_pred.tex", width = 6, height = 3, timestamp = FALSE)
-print(p)
-dev.off()
-
 p <- ggplot(travelcard_week, aes(DateTime, Error / Pred)) +
   geom_bar(stat = 'identity', position = 'dodge') +
   scale_x_datetime(breaks = travelcard_week[(Hour == 12)]$DateTime, labels = travelcard_week[(Hour == 12)]$DayOfWeek) +

@@ -27,14 +27,15 @@ write_example_weather <- function(weather)
   weather_tab[, c("Date") := NULL, with=FALSE]
   weather_tab$DateTime <- format(weather_tab$DateTime, format = '%Y-%m-%d %H:%M')
   weather_tab$Rain <- as.factor(weather_tab$Rain)
+  weather_tab$Clear <- as.factor(weather_tab$Clear)
   colnames(weather_tab) <- c("Date/time",
                              "Temperature",
                              "Dew point",
                              "Wind speed",
-                             "Gust speed",
                              "Humidity",
                              "Precipitation",
-                             "Rain")
+                             "Rain",
+                             "Clear")
   
   # Ensure tables export path
   dir.create('../tables/', showWarnings = FALSE)
@@ -56,7 +57,7 @@ prep_weather <- function()
   weather <- read_csv("../data/EKCH.csv", na = c("", "N/A", "-", " "), col_types = list(
     TimeCEST = col_skip(),
     WindSpeedKmH = col_number(),
-    GustSpeedKmH = col_number()
+    GustSpeedKmH = col_skip()
   ))
   setDT(weather)
   
@@ -74,6 +75,9 @@ prep_weather <- function()
     weather_clean[Conditions == rain[r]]$Rain = r
   }
   
+  weather_clean$Clear <- 0
+  weather_clean[Conditions == 'Clear']$Clear <- 1
+  
   weather_clean[, c("Events",
                     "Conditions",
                     "SeaLevelPressurehPa",
@@ -89,16 +93,16 @@ prep_weather <- function()
     by = "CET")
   
   colnames(weather_clean)[1] = "Date"
-  colnames(weather_clean)[7] = "DateTime"
+  colnames(weather_clean)[6] = "DateTime"
   weather_clean$DateTime <- as.POSIXct(format(weather_clean$DateTime, tz="Europe/Copenhagen", usetz=TRUE))
   setcolorder(weather_clean, c("Date",
                                "DateTime",
                                "TemperatureC",
                                "DewPointC",
                                "WindSpeedKmH",
-                               "GustSpeedKmH",
                                "Humidity",
                                "Precipitationmm",
-                               "Rain"))
+                               "Rain",
+                               "Clear"))
   weather_clean
 }

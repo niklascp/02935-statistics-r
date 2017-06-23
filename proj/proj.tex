@@ -157,7 +157,7 @@ Historical weather data was obtained and prepared as described in \Cref{appx:wea
     \label{tab:weather_data_attr}
 \end{table}
 
-Notice that gust speed is only available if any sudden, brief increase in the speed of the wind followed by a lull is recorded shortly up to the measurement.
+\todo{Remove Gust?}Notice that gust speed is only available if any sudden, brief increase in the speed of the wind followed by a lull is recorded shortly up to the measurement.
  
 \begin{table}[!ht]
     \center
@@ -168,6 +168,7 @@ Notice that gust speed is only available if any sudden, brief increase in the sp
     \label{tab:weather_data_example}
 \end{table}
 
+Weather conditions seems quite sparse, e.g.\ as shown in \Cref{fig:weather_hist} rain conditions are only observed $\approx10 \%$ of the time. And two thirds of the time the rain precipitation is considered \emph{light}.
 
 \begin{figure}[!ht]
     \center
@@ -179,17 +180,38 @@ Notice that gust speed is only available if any sudden, brief increase in the sp
 \clearpage
 
 \section{Statistical analysis}
+With a good understanding of the two data sets, we move on to the statistical analysis of the impact of weather on travel demand.
 
-$$
-\textit{CheckInCount}^{\frac{1}{4}} \sim \textit{DayOfWeek} + \textit{Hour} + \textit{DayOfWeek}:\textit{Hour} + \textit{Day}
-$$
+\subsection{Normilization of travel demand}
+As etablished by the descriptive analysis of travel demand data in \Cref{ch:desc_traveldemand}, the expected demand varies throughout the time of the day, and the day of the week. In order to find any impacts of weather we must focus on diviations from the normal and expected fluctuations.
 
+The approach for this is to fit a linear regression model on the travel demand data, using time of the day and day of the week (and their interaction), along with an overall day measure as shown in~(\ref{eq:fit}). The last term is simply number of days from first date in the data set, and allows for an overall increase/decline of travel demand. 
+\begin{equation}
+    \sqrt[\leftroot{0}\uproot{2}4]{\textit{CheckInCount}} \sim \textit{DayOfWeek} + \textit{Hour} + \textit{DayOfWeek}:\textit{Hour} + \textit{Day}    
+    \label{eq:fit}
+\end{equation}
+
+Notice that we transform the response to the fourth root of the travel demand. This is to ensure homoscedasticity of error. We verify that model assumptions hold using \Cref{fit-assumptions}. From the \emph{Residuals vs Fitted}-plot we see linear behavior, and normal error is also acceptable cf. \emph{Normal Q-Q}-plot. Constant variance of error is also confirmed by the uniform spread in the \emph{Scale-Location}-plot. Finally we might identify some outliers in the \emph{Residuals vs Fitted}-plot, but as outliers is part of what we are trying to identify (e.g. any non-normal travel demand), we will not remove any of them.
+
+The model is then applied to the data, as illustrated in the example in \Cref{fig:travelcard_pred}, which simply shows the first whole week in the data set.
 \begin{figure}[!ht]
     \center
     \input{../plots/travelcard_pred.tex}
+    \vspace{-1em}
     \caption{Predicted passenger boardings of a single week.}
     \label{fig:travelcard_pred}
 \end{figure}
+
+\clearpage
+\begin{figure}[!p]
+    \center
+    \includegraphics[width=\textwidth]{../plots/fit-assumptions}    
+    \caption{Plots for confirming model assumptions.}    
+    \label{fit-assumptions}
+\end{figure}
+\clearpage
+
+
 
 \clearpage
 
@@ -218,18 +240,21 @@ For the sake of simplicity the analysis is expected to be limited to a single ge
 \subsection{Checking model assumptions}
 \todo{Check model assumptions}
 
+\clearpage
 \begin{spacing}{1}
   \bibliographystyle{apalike}
   \addcontentsline{toc}{section}{References}
   \bibliography{../references/library}
 \end{spacing}
 
+\clearpage
 \appendix
 \section*{Appendices}
 \addcontentsline{toc}{section}{Appendices}
 \renewcommand{\thesubsection}{\Alph{subsection}}
 
 \input{appx_travel_demand_data.tex}
+\clearpage
 \input{appx_weather_data.tex}
 
 \end{document}

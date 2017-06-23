@@ -17,11 +17,11 @@ write_example_weather(weather)
 # PLOTS FOR DESCRIPTIVE ANALYSIS
 # ------------------------------
 
-weather_clean[, list(Freq = .N), by = Rain][, list(Freq2 = Freq/sum(.N))]
+rain_freq <- weather[, .N, by = Rain][, Freq := N/sum(N)]
 
-p <- ggplot(weather_clean[Rain > 0], aes(x = as.factor(Rain))) +
-  geom_bar() +
-  scale_x_discrete(labels = rain) +
+p <- ggplot(rain_freq[Rain > 0], 
+            aes(x = factor(Rain, labels = rain_levels()), y = Freq)) +
+  geom_bar(stat = 'identity') +
   labs(x = 'Level of rain', y = 'Frequency') +
   theme_bw() +
   theme(
@@ -32,21 +32,6 @@ p <- ggplot(weather_clean[Rain > 0], aes(x = as.factor(Rain))) +
   )
 p  
 tikz(file = "../plots/weather_hist.tex", width = 6, height = 3, timestamp = FALSE)
-print(p)
-dev.off()
-
-weather_week <- weather_clean[('2016-10-03' <= Date) & (Date <= '2016-10-09')]
-
-p <- ggplot(weather_week, aes(DateTime, Rain * Precipitationmm)) +
-  geom_bar(aes(DateTime, Rain * Precipitationmm), stat = 'identity', fill = 'blue') +
-  theme_bw() +
-  theme(
-    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
-    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
-  )
-
-p
-tikz(file = "../plots/weather_rain.tex", width = 6, height = 3, timestamp = FALSE)
 print(p)
 dev.off()
 
