@@ -319,7 +319,7 @@ The model is then applied to the data, yielding the estimated travel demand~\gls
     \label{fig:travelcard_pred}
 \end{figure}
 
-From the model we calculate the \emph{relative error}, $\mathir{re}_i$. The latter can be thought as the 
+From the estimated travel demand, the relative error, \gls{re_i}, is calculated cf.~\Cref{eq:error}. This value can be interpreted as the percentage the $i$'th observation deviates from the expected travel pattern.
 \begin{align}
     \mathit{re}_i &= \frac{D_i - \widehat{D_i}}{\widehat{D_i}}
     \label{eq:error}
