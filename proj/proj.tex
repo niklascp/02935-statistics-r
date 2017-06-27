@@ -4,6 +4,7 @@
 
 \usepackage[affil-it]{authblk}
 \usepackage{natbib}
+\usepackage[toc,nonumberlist,sort=def]{glossaries}
 
 \usepackage{setspace}
 
@@ -46,6 +47,64 @@
 
 %\affil{Trafikselskabet Movia \\ Technical University of Denmark, 2800 Kongens Lyngby, Denmark}
 
+\newglossaryentry{D_i}
+{
+  name=\ensuremath{D_i},
+  description={is the \emph{observed} travel demand at the $i$'th observation/time, i.e.\ number of passenger boardings using the smart-card ticketing system}
+}
+
+\newglossaryentry{D_i_pred}
+{
+  name=\ensuremath{\widehat{D_i}},
+  description={is the \emph{estimated} travel demand for time $i$}
+}
+
+\newglossaryentry{re_i}
+{
+  name=\ensuremath{\mathit{re}_i},
+  description={is the \emph{relative error} of travel demand for time $i$}
+}
+
+\newglossaryentry{t_i}
+{
+  name=\ensuremath{t_i},
+  description={is the timestamp for the $i$'th observation in local time (e.g.\ ``2016-10-01 00:00'')}
+}
+
+\newglossaryentry{dow_i}
+{
+  name=\ensuremath{\mathit{dow}_i},
+  description={is the day of week of the $i$'th observation (i.e.\ \textsc{Mon}, \textsc{Tue}, ... \textsc{Sun})}
+}
+
+\newglossaryentry{hour_i}
+{
+  name=\ensuremath{\mathit{tod}_i},
+  description={is the time of day of the $i$'th observation (i.e.\ ``0-1'', ``1-2'', ... ``23-24'')}
+}
+
+\newglossaryentry{day_i}
+{
+  name=\ensuremath{\mathit{day}_i},
+  description={is the day number of the $i$'th observation, i.e.\ number of days between $t_0$ and $t_i$}
+}
+
+\newglossaryentry{daytype_i}
+{
+  name=\ensuremath{\mathit{dt}_i},
+  description={is the day type of the $i$'th observation, i.e.\ \textsc{Weekday} or \textsc{Weekend}}
+}
+
+\newglossaryentry{peek_i}
+{
+  name=\ensuremath{\mathit{peek}_i},
+  description={is the peek class of the $i$'th observation, i.e.\ \textsc{No}, \textsc{Morning}, or \textsc{Afternoon} peek}
+}
+
+
+
+\makeglossaries
+
 \begin{document}
 \singlespace
 \maketitle
@@ -55,6 +114,11 @@
 \onehalfspacing
 \pagenumbering{arabic}
 \tableofcontents
+\clearpage
+\glsaddall
+\printglossaries
+
+
 \clearpage
 
 \section{Background}\label{ch:background}
@@ -78,17 +142,17 @@ Travel demand data was obtained and prepared as described in \Cref{appx:travel_d
 
 \begin{table}[!ht]
     \center
-    \begin{tabular}{p{1in}p{4in}}        
-        Attribute & Description \\
+    \begin{tabular}{p{.5in}p{1in}p{4in}}        
+        Symbol & Attribute & Description \\
         \hline 
         \hline         
-        Date & The date of the observation (2016-10-01 - 2017-03-31). \\
+        & Date & The date of the observation (2016-10-01 - 2017-03-31). \\
         \hline 
-        Hour & The hour of the observation (0--23, e.g.\ hour = 0 means between 00:00 and 01:00). \\
+        \gls{hour_i} & Hour & The hour of the observation (0--23, e.g.\ hour = 0 means between 00:00 and 01:00). \\
         \hline 
-        Date of week & The day of the week of the observation (Mon - Sat), with statutory holidays encoded as Saturdays. \\
+        \gls{dow_i} & Date of week & The day of the week of the observation (Mon - Sat), with statutory holidays encoded as Saturdays. \\
         \hline 
-        Check in count & Number of passenger boardings using the smart-card ticketing system. \\
+        \gls{D_i} & Check in count & Number of passenger boardings using the smart-card ticketing system. \\
     \end{tabular}
     \caption{Attributes in the travel demand data set.}
     \label{tab:travel_demand_data_attr}
@@ -123,6 +187,10 @@ Intuitively travel demand also varies throughout the day as shown in~\Cref{fig:t
     \caption{Mean passenger boardings by hour of day and day of week.}
     \label{fig:travelcard_hist}
 \end{figure}
+\clearpage
+
+\subsubsection{Expanding travel demand data}\label{ch:expand_traveldemand}
+
 \clearpage
 
 \subsection{Weather data}\label{ch:desc_weather}
@@ -182,18 +250,67 @@ Weather conditions seems quite sparse, e.g.\ as shown in \Cref{fig:weather_hist}
 \section{Statistical analysis}
 With a good understanding of the two data sets, we move on to the statistical analysis of the impact of weather on travel demand.
 
-\subsection{Normilization of travel demand}
-As etablished by the descriptive analysis of travel demand data in \Cref{ch:desc_traveldemand}, the expected demand varies throughout the time of the day, and the day of the week. In order to find any impacts of weather we must focus on diviations from the normal and expected fluctuations.
+\subsection{Normalization of travel demand}
+As etablished by the descriptive analysis of travel demand data in \Cref{ch:desc_traveldemand}, the expected demand varies throughout the time of the day, and the day of the week. In order to find any impacts of weather we must focus on deviations from the normal and expected pattern.
 
-The approach for this is to fit a linear regression model on the travel demand data, using time of the day and day of the week (and their interaction), along with an overall day measure as shown in~(\ref{eq:fit}). The last term is simply number of days from first date in the data set, and allows for an overall increase/decline of travel demand. 
+Once we have presented our models, we want to evaluate them using following measures: \emph{mean absolute percentage error} (MAPE) and \emph{root mean square error} (RMSE) cf.~\Cref{eq:mape,eq:rmse}.
+\vspace{-2em}
+\begin{multicols}{2}
 \begin{equation}
-    \sqrt[\leftroot{0}\uproot{2}4]{\textit{CheckInCount}} \sim \textit{DayOfWeek} + \textit{Hour} + \textit{DayOfWeek}:\textit{Hour} + \textit{Day}    
+    \textrm{MAPE}(D, \widehat{D}) = \frac{1}{n} \sum_{i = 1}^{n} \left| \frac{\gls{D_i} - \gls{D_i_pred}}{\gls{D_i}} \right| 
+    \label{eq:mape} 
+\end{equation}
+\break
+\vspace{-6.5pt}
+\begin{equation}
+    \textrm{RMSE}(D, \widehat{D}) = \sqrt{\frac{\sum_{i = 1}^{n} \gls{D_i} - \gls{D_i_pred}}{n}}
+    \label{eq:rmse}
+\end{equation}
+\end{multicols}
+
+\subsubsection{Modeling with single LR-model}
+The initial approach for this is to fit a \emph{single} linear regression (LR) model, $\mathcal{D}$ on the \emph{entire} travel demand data, using time of the day, \gls{hour_i}, day of the week, \gls{dow_i}, their interaction, along with the overall day measure, \gls{day_i}, as shown in~(\ref{eq:fit}). The intuition about this approach is to let the model capture as much as possible of the travel demand variation that can be explained by the observations being measured at different times. The last term, \gls{day_i}, allows for the capture of an overall increase/decline of travel demand. 
+\begin{equation}
+    \mathcal{D} \models \sqrt[\leftroot{0}\uproot{2}4]{\textit{\gls{D_i}}} \sim \gls{dow_i} + \gls{hour_i} + \gls{dow_i}:\gls{hour_i} + \gls{day_i}  
     \label{eq:fit}
 \end{equation}
 
-Notice that we transform the response to the fourth root of the travel demand. This is to ensure homoscedasticity of error. We verify that model assumptions hold using \Cref{fit-assumptions}. From the \emph{Residuals vs Fitted}-plot we see linear behavior, and normal error is also acceptable cf. \emph{Normal Q-Q}-plot. Constant variance of error is also confirmed by the uniform spread in the \emph{Scale-Location}-plot. Finally we might identify some outliers in the \emph{Residuals vs Fitted}-plot, but as outliers is part of what we are trying to identify (e.g. any non-normal travel demand), we will not remove any of them.
+Notice that we transform the response to the fourth root of the travel demand. This is to ensure homoscedasticity of error. We verify that model assumptions hold using \Cref{fit-assumptions}. From the \emph{Residuals vs Fitted}-plot we see linear behavior, and normal error is also acceptable cf. \emph{Normal Q-Q}-plot. Constant variance of error is also confirmed by the uniform spread in the \emph{Scale-Location}-plot. Finally we might identify some outliers in the \emph{Residuals vs Fitted}-plot, but as outliers is part of what we are trying to identify (e.g.\ any non-normal travel demand), we will not remove any of them. Finally we confirm that all terms are contribution statistically significant to the model, i.e.\ no non-significant terms can be dropped from the model.
 
-The model is then applied to the data, as illustrated in the example in \Cref{fig:travelcard_pred}, which simply shows the first whole week in the data set.
+\begin{figure}[!p]
+    \center
+    \includegraphics[width=\textwidth]{../plots/fit-assumptions}    
+    \caption{Plots for confirming model assumptions.}    
+    \label{fit-assumptions}
+\end{figure}
+
+With model assumptions checked, the model is evaluated cf.\ \Cref{tab:model_all_eval}. It is seen that the model captures quite well on the surface, with an overall MAPE of 12\% and RMSE of\ $~70$~passengers. There are however large deviations in the  of the different {day types}, \gls{daytype_i}, and {peek classes}, \gls{peek_i}.
+\begin{table}[!ht]
+    \center
+    \input{../tables/model_all_eval.tex}
+    \caption{Evaluation of initial model approach.}
+    \label{tab:model_all_eval}
+\end{table}
+
+\subsubsection{Modeling using multiple independent models}
+Different configurations of independent sub-models is investigated by dividing the travel demand data set based on \gls{daytype_i} and \gls{peek_i}, and the combination of both. It is found that the best results are achieved by segmenting by \gls{peek_i}. Based on this three models are defined cf.\ \Cref{eq:model_np,eq:model_mp,eq:model_ap}. Notice that model-selection revealed that the interaction-term $\gls{dow_i}:\gls{hour_i}$ is not significant for $\mathcal{D}_{\textsc{Morning}}$, and has thus been dropped from the model.
+\begin{align}
+\mathcal{D}_{\textsc{No}} &\models \sqrt[\leftroot{0}\uproot{2}4]{\textit{\gls{D_i}}} \sim \gls{dow_i} + \gls{hour_i} + \gls{dow_i}:\gls{hour_i} + \gls{day_i} &\text{for} \; \gls{peek_i} = \textsc{No} \label{eq:model_np} \\
+\mathcal{D}_{\textsc{Morning}} &\models \sqrt[\leftroot{0}\uproot{2}4]{\textit{\gls{D_i}}} \sim \gls{dow_i} + \gls{hour_i} + \gls{day_i}  &\text{for} \; \gls
+{peek_i} = \textsc{Morning}  \label{eq:model_mp} \\
+\mathcal{D}_{\textsc{Afternoon}} &\models \sqrt[\leftroot{0}\uproot{2}4]{\textit{\gls{D_i}}} \sim \gls{dow_i} + \gls{hour_i} + \gls{dow_i}:\gls{hour_i} + \gls{day_i}  &\text{for} \; \gls{peek_i} = \textsc{Afternoon}  \label{eq:model_ap}
+\end{align}
+
+Once again model assumptions are checked using plots (See~\Cref{appx:model_assumptions}) and are accepted, although the assumption of normal errors is weak for $\mathcal{D}_{\textsc{Morning}}$. The evaluation result is shown in~\Cref{tab:model_independent_eval}, and while the segmentation does improves the MAPE and RMSE, the improvements are minor. Only $\textsc{Weekday}/\textsc{Morning}$ seems to benefit noticeably, while RMSE for $\textsc{Weekday}/\textsc{No Peek}$ decline minimally.
+\begin{table}[!ht]
+    \center
+    \input{../tables/model_independent_eval.tex}
+    \caption{Evaluation of multiple independent models approach.}
+    \label{tab:model_independent_eval}
+\end{table}
+
+\subsubsection{Model application}
+The model is then applied to the data, yielding the estimated travel demand~\gls{D_i_pred}, as illustrated in the example in \Cref{fig:travelcard_pred}, which simply shows the first whole week in the data set.
 \begin{figure}[!ht]
     \center
     \input{../plots/travelcard_pred.tex}
@@ -202,18 +319,11 @@ The model is then applied to the data, as illustrated in the example in \Cref{fi
     \label{fig:travelcard_pred}
 \end{figure}
 
-\clearpage
-\begin{figure}[!p]
-    \center
-    \includegraphics[width=\textwidth]{../plots/fit-assumptions}    
-    \caption{Plots for confirming model assumptions.}    
-    \label{fit-assumptions}
-\end{figure}
-\clearpage
-
-
-
-\clearpage
+From the model we calculate the \emph{relative error}, $\mathir{re}_i$. The latter can be thought as the 
+\begin{align}
+    \mathit{re}_i &= \frac{D_i - \widehat{D_i}}{\widehat{D_i}}
+    \label{eq:error}
+\end{align}
 
 \begin{figure}[!ht]
     \center
@@ -222,12 +332,7 @@ The model is then applied to the data, as illustrated in the example in \Cref{fi
     \label{fig:travelcard_error_pct}
 \end{figure}
 
-\begin{figure}[!ht]
-    \center
-    \input{../plots/weather_rain.tex}
-    \caption{Error percentage of a single week.}
-    \label{fig:weather_rain}
-\end{figure}
+\subsection{Merge of weather and travel demand}
 
 
 \clearpage
@@ -239,6 +344,13 @@ For the sake of simplicity the analysis is expected to be limited to a single ge
 
 \subsection{Checking model assumptions}
 \todo{Check model assumptions}
+
+\section{Discussion}
+
+\subsection{Future work}
+SVM 
+
+\section{Conclusion}
 
 \clearpage
 \begin{spacing}{1}
@@ -256,5 +368,7 @@ For the sake of simplicity the analysis is expected to be limited to a single ge
 \input{appx_travel_demand_data.tex}
 \clearpage
 \input{appx_weather_data.tex}
+\clearpage
+\input{appx_model_assumptions.tex}
 
 \end{document}
