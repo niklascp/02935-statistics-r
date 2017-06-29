@@ -19,27 +19,39 @@ Before going into the multivariate analysis, it is desirable to look for  of the
 
 The discrete variables (weather condition, \gls{cond_i}, day type, \gls{daytype_i}, and peek class, \gls{peek_i}) is investigated using ANOVA to test whether they contribute to \gls{re_i}. It is found with strong evidence ($F = 38.147, p < 0.001$) that the weather condition is influencing the travel demand, and the relationship is shown in \Cref{fig:cor_cond}. This is of cause not that surprising, and expected that rain impacts with an increased travel demand. On the other hand is cannot been shown that day type, \gls{daytype_i}, and peek class, \gls{peek_i}, has influence ($F =  0.1395, p = 0.709$ respectable $F =  0.0463, p = 0.955$), i.e.\ the weather condition impacts similarly regardless of people are on their way to work or using public transport for leisure rides, which is interesting.
 
-For the continues variables, a single relationship for the  is plotted, i.e.\ \gls{temp_i} and \gls{re_i} as shown in \Cref{fig:cor_temp} there is evidence that there exists a more complex relationship. For instance \Cref{fig:cor_temp} indicates that smaller freezing temperatures (i.e. between $-5^{\circ}$ to $0^{\circ}$) impacts with a increased travel demand, while more freezing temperatures (i.e. below $-5^{\circ}$) impacts with a reduced travel demand. This supports that a multivariate analysis is required to explain the weather impact on travel demand.
-
+For the continues variables, selected relationships are plotted, i.e.\ $\gls{re_i} \sim \gls{temp_i}$ and $\gls{re_i} \sim \gls{ws_i}$ and as shown in \Cref{fig:cor_temp,fig:cor_ws}, where the band indicates a 95\% confidence interval of the mean. For instance the impact of temperature indicates that smaller freezing temperatures (i.e. between $-5^{\circ}$ to $0^{\circ}$) impacts with a increased travel demand, while more freezing temperatures (i.e. below $-5^{\circ}$) impacts with a reduced travel demand. Likewise \Cref{fig:cor_ws} suggest that there exists an almost sigmoid shaped jump around 18 km/h, where the travel demand deviations shift from decrease to increased very rapid. These examples is evidence that the impact of weather on travel demand is mush more complex than can be explained by univariate analysis, and supports that a multivariate analysis is required to explain the relationship.
+\vspace{-3em}
 \begin{figure}[!ht]
     \center
     \includegraphics{../plots/cor_matrix}
+    \vspace{-2em}
     \caption{Correlation matrix visualization.}
     \label{fig:cor_matrix}
 \end{figure}
-
+\vspace{-1em}
 \begin{figure}[!ht]
     \center
     \input{../plots/cor_cond.tex}
+    \vspace{-1em}
     \caption{Correlation between weather conditions and relative error.}
     \label{fig:cor_cond}
 \end{figure}
+\vspace{-1em}
+\clearpage
 
 \begin{figure}[!ht]
     \center
     \input{../plots/cor_temp.tex}
+    \vspace{-1em}
     \caption{Correlation between temperature and relative error.}
     \label{fig:cor_temp}
+\end{figure}
+
+\begin{figure}[!ht]
+    \center
+    \input{../plots/cor_ws.tex}
+    \caption{Correlation between wind speed and relative error.}
+    \label{fig:cor_ws}
 \end{figure}
 
 \subsection{Principal component analysis}
@@ -65,5 +77,6 @@ For this reason it is argued that PCA is not an appropriate method for the multi
     \caption{PCA loadings for PC1--PC5.}
     \label{fig:pca_loadings}
 \end{figure}
+\clearpage
 
 \subsection{Support vector regression (SVR)}

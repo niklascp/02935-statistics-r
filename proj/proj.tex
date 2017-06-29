@@ -154,11 +154,28 @@
 
 Observing and predicting the demand for bus travel is of major impact for designing and operating an efficient public transport system in any urban area. It is a common understanding, that there are several external factors that impact the travel demand. Examples include weather, events, etc. It is however uncertain how much each factor really contributes to fluctuation in travel demand. 
 
+This project aims to shed light upon the impact of specifically weather as an external factor for bus travel demand. The goal is to visualize and understand the data described in the following, and to show if any significant correlations between the datasets exists. Finally an simple model for travel demand prediction should be build in R.
+
 \subsection{Related work}\label{ch:relatedWork}
 The impact of weather conditions on transport is a well-studied area within the scientific field of transport modeling.
 TODO
 
 For weather conditions, only sunny days and rainy days are considered: \citet{Yo2010}
+
+
+
+
+\subsection{Objective and scientific question}\label{ch:objective}
+
+\subsection{Scope}\label{ch:scope}
+For the sake of simplicity the analysis is expected to be limited to a single geographical area (i.e. Copenhagen) and one bus line (i.e. 5A). 
+
+\subsection{Statistical programming and reproducibility}\label{ch:reproducibility}
+The statistical programming for this work is implemented using the R programming language \citep{R}. All work conducted for this statistical report is open and freely available at \url{https://github.com/niklascp/02935-statistics-r}, including program source code and full result sets. 
+
+This allows reproducibility of results and transparency of applied methods.
+
+
 
 \clearpage
 
@@ -177,21 +194,21 @@ As established earlier, the goal of this project is to shed light upon the impac
 \input{statistical_analysis.tex}
 \clearpage
 
-\section{Problem and Data}\label{ch:data_old}
-This project aims to shed light upon the impact of specifically weather as an external factor for bus travel demand. The goal is to visualize and understand the data described in the following, and to show if any significant correlations between the datasets exists. Finally an simple model for travel demand prediction should be build in R.
-
-For the sake of simplicity the analysis is expected to be limited to a single geographical area (e.g. Copenhagen) and bus line.
-
-
 \section{Discussion}
+The use of a linear regression model (LR) for modeling the expected variations in the travel demand pattern, i.e.\ the normal condition, seem reasonable as supported by a low MAPE around 10 \%. It is though probably easy to improve this with more advanced regression models, e.g.\ support vector regression (SVR) or artificial neural networks (ANN), but this will compromise the interpretability of the simple LR-model.
+
+The application of PCA did not yield any clear patterns of clusterings with respect to detection between increased and decreased demand deviation, and it is probably not appropriate method for this multivariate
+problem, as the weather data set does not project well to any lower sub-spaces. This was shown by scree and loading plots. Instead an attempt for use of support vector machines (SVM) was made, and even though the model was not optimized (i.e. hyper-parameter tuning), it showed promising results.
 
 \subsection{Future work}
-SVM 
-
-Do: decribe variable selection - coalation plots
-
+Future work should increase the precision of the prediction as well as test for changes between different geospatial areas (e.g.\ rural areas vs.\ suburban areas). Finally more external factors besides weather can be included, e.g.\ events.
 
 \section{Conclusion}
+This statistical report shed light upon the impact of specifically weather as an external factor for bus travel demand. The report has presented a model for measuring the deviations from the expected variations in the normal travel demand pattern.
+
+Furthermore the correlation between this deviation measure, and weather has been analyzed using simple univariate analysis, unsupervised learning (PCA) and lastly supervised learning (SVM).
+
+The overall result confirms a strong influence of weather conditions on the deviation measure, although is also implies that the impact is too complex for univariate analysis and requires supervised learning methods. It is suggested that further research should be invested in the supervised learning methods, as early results shows promising capabilities of predicting the deviation ahead of time.
 
 \clearpage
 \begin{spacing}{1}
