@@ -19,9 +19,9 @@ traveldemand <- transform_traveldemand(traveldemand)
 dir.create('../plots/', showWarnings = FALSE)
 
 # Line plot by hour of day and ay of week.
-p <- ggplot(travelcard, aes(DayOfWeek, CheckInCount, color = DayOfWeek)) +
+p <- ggplot(traveldemand, aes(dow, D, color = dow)) +
   geom_boxplot(notch = TRUE) +
-  labs(x = 'Day of week', y = 'Passenger boardings') +
+  labs(x = 'Day of week, $\\mathit{dow}$', y = 'Travel demand, $D$') +
   theme_bw() +
   theme(
     axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
@@ -34,12 +34,12 @@ tikz(file = "../plots/travelcard_boxplot.tex", width = 6, height = 3, timestamp 
 print(p)
 dev.off()
 
-# Line plot by hour of day and ay of week.
-travelcard_week <- travelcard[, list(Mean.CheckInCount = mean(CheckInCount), Var = var(CheckInCount)), by = list(DayOfWeek, Hour)]
+# Line plot by hour of day and day of week.
+traveldemand_week <- traveldemand[, list(D_mean = mean(D)), by = list(dow, tod)]
 
-p <- ggplot(travelcard_week, aes(as.integer(Hour) - .5, Mean.CheckInCount, group = DayOfWeek, color = DayOfWeek)) +
+p <- ggplot(traveldemand_week, aes(as.integer(tod) - .5, D_mean, group = dow, color = dow)) +
   geom_line() +
-  labs(x = 'Hour of day', y = 'Passenger boardings', color = 'Day of week:') +
+  labs(x = 'Time of day, $\\mathit{tod}$', y = 'Mean travel demand, $\\mathrm{mean}(\\mathit{D})$', color = 'Day of week, $\\mathit{dow}$:') +
   scale_x_continuous(breaks = seq(0, 24), labels = head(c(rbind(seq(0, 24, by = 2), rep('', 13))), 25)) +
   theme_bw() +
   theme(
@@ -55,52 +55,3 @@ tikz(file = "../plots/travelcard_hist.tex", width = 6, height = 3, timestamp = F
 print(p)
 dev.off()
 
-
-
-# --------------------
-# STATISTICAL ANALYSIS
-# --------------------
-fit_dayofweek <- lm(CheckInCount ~ DayOfWeek, data = travelcard[DayOfWeek %in% c("Mon", "Tue", "Wed", "Thu")])
-anova(fit_dayofweek)
-
-fit_dayofweek <- lm(CheckInCount ~ DayOfWeek, data = travelcard[DayOfWeek %in% c("Mon", "Tue", "Wed", "Thu", "Fri")])
-anova(fit_dayofweek)
-
-fit <- lm(CheckInCount^(1/4) ~ DayOfWeek + Hour + DayOfWeek:Hour + Day, data = travelcard)
-summary(fit)
-
-par(mfrow=c(2, 2))
-plot(fit, which=1:4)
-
-drop1(fit, test = 'F')
-
-p <- ggplot(travelcard_week, aes(DateTime, Error / Pred)) +
-  geom_bar(stat = 'identity', position = 'dodge') +
-  scale_x_datetime(breaks = travelcard_week[(Hour == 12)]$DateTime, labels = travelcard_week[(Hour == 12)]$DayOfWeek) +
-  scale_y_continuous(breaks = seq(-.75,.75, by = .25)) +
-  theme_bw() +
-  theme(
-    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
-    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
-  )
-
-p
-
-tikz(file = "../plots/travelcard_error_pct.tex", width = 6, height = 3, timestamp = FALSE)
-print(p)
-dev.off()
-
-
-par(mfrow=c(1, 1))
-plot(travelcard[, list(RMSE = sqrt(mean(Error^2))), by = Date])
-plot(travelcard[, list(MAE = mean(abs(Error))), by = Date])
-
-ggplot(travelcard, aes(DateTime, Error)) +
-  geom_point() 
-  #geom_ribbon(aes(ymin = ErrorLwr, ymax = ErrorUpr), fill = 'gray30')
-
-travelcard[, list(RMSE = sqrt(mean(Error^2))), by = DayOfWeek, Hour]
-travelcard[, list(RMSE = sqrt(mean(Error^2))), by = ]
-
-travelcard[, list(Mean.error = mean(Error)), by = DayOfWeek]
-travelcard[, list(Mean.error = mean(Error)), by = Hour]

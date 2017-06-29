@@ -18,14 +18,16 @@ write_example_traveldemand <- function(traveldemand)
   dir.create('../tables/', showWarnings = FALSE)
   
   # Export example table
-  traveldemand_tab <- copy(traveldemand)
-  traveldemand_tab$Date <- format(traveldemand_tab$Date, format = '%Y-%m-%d')
-  names(traveldemand_tab) <- c('Date', 'Hour', 'Date of week', 'Check in count')
+  traveldemand_tab <- copy(traveldemand[, !c("date"), with=FALSE])
+  traveldemand_tab$t <- format(traveldemand_tab$t, format = '%Y-%m-%d %H:%M')
+  colnames(traveldemand_tab) <- paste0('$\\mathit{', colnames(traveldemand_tab), '}$')
+  
   print(xtable(head(traveldemand_tab, 10)),
         type = "latex",
         file = "../tables/travel_demand_data_example.tex",
         hline.after = c(0,0:9),
-        include.rownames = FALSE)
+        sanitize.text.function=function(x){x},
+        include.rownames = TRUE)
 }
 
 # -----------------------
@@ -33,28 +35,31 @@ write_example_traveldemand <- function(traveldemand)
 # -----------------------
 
 prep_traveldemand <- function() {
-  traveldemand <- as.data.table(read_delim("../data/travelcard_2.csv", ";"))
-  traveldemand <- traveldemand[!(('2016-12-23' <= Date) & (Date <= '2017-01-01'))]
-  traveldemand$DayOfWeek <- factor(traveldemand$DayOfWeek, 
-                                 labels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
-  traveldemand$Hour <- factor(traveldemand$Hour)
+  traveldemand <- as.data.table(read_delim("../data/travelcard_2.csv", ";", col_names = c('date', 'tod', 'dow', 'D'), skip = 1))
+  # Remove christmas week
+  traveldemand <- traveldemand[!(('2016-12-23' <= date) & (date <= '2017-01-01'))]
+  # Parse date and reorder
+  traveldemand$t <- as.POSIXct(format(traveldemand$date)) + traveldemand$tod * 60 * 60
+  setcolorder(traveldemand, c('date', 't', 'tod', 'dow', 'D'))
+  traveldemand$dow <- factor(traveldemand$dow, 
+                             labels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
+  traveldemand$tod <- factor(traveldemand$tod)
   traveldemand
 }
 
 transform_traveldemand <- function(traveldemand)
 {
-  traveldemand$Day <- as.integer(traveldemand$Date - min(traveldemand$Date))
-  traveldemand$DateTime <- as.POSIXct(format(traveldemand$Date)) + (as.integer(traveldemand$Hour) - 1) * 60 * 60
+  traveldemand$day <- as.integer(traveldemand$date - min(traveldemand$date))
   
-  traveldemand[, DayType := 'WEEKDAY']
-  traveldemand[DayOfWeek == 'Sat', DayType := 'WEEKEND']
-  traveldemand[DayOfWeek == 'Sun', DayType := 'WEEKEND']
-  traveldemand$DayType = factor(traveldemand$DayType)
+  traveldemand[, dt := 'Weekday']
+  traveldemand[dow == 'Sat', dt := 'Weekend']
+  traveldemand[dow == 'Sun', dt := 'Weekend']
+  traveldemand$dt = factor(traveldemand$dt)
   
-  traveldemand[, Peek := 'NO']
-  traveldemand[DayType == 'WEEKDAY' & Hour %in% c('7', '8'), Peek := 'MORNING']
-  traveldemand[DayType == 'WEEKDAY' & Hour %in% c('15', '16', '17'), Peek := 'AFTERNOON']
-  traveldemand$Peek = factor(traveldemand$Peek)
+  traveldemand[, peek := 'No Peek']
+  traveldemand[dt == 'Weekday' & tod %in% c('7', '8'), peek := 'Morning']
+  traveldemand[dt == 'Weekday' & tod %in% c('15', '16', '17'), peek := 'Afternoon']
+  traveldemand$peek = factor(traveldemand$peek)
   
   traveldemand
 }
