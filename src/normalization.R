@@ -128,9 +128,32 @@ traveldemand$D_error <- traveldemand$D - traveldemand$D_pred
 # Export evaluation table to latex
 write_result_table(traveldemand, "../tables/model_independent_eval.tex")
 
+# Calculate relative error
+traveldemand$re <- traveldemand$D_error / traveldemand$D_pred
 
+travelcard_week <- traveldemand[('2016-10-03' <= t) & (t < '2016-10-10')]
+
+p <- ggplot(travelcard_week, aes(t, D)) +
+  geom_bar(stat = 'identity') +
+  geom_line(aes(y = D_pred, color = 'Est. Travel Demand, $\\widehat{D}$'), color = 'red') +
+  labs(x = 'Time, $t$', y = 'Travel Demand, $D$') + 
+  scale_x_datetime(breaks = travelcard_week[(tod == 13)]$t, labels = travelcard_week[(tod == 13)]$dow) +
+  theme_bw() +
+  theme(
+    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
+    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
+  )
+
+p
+
+tikz(file = "../plots/travelcard_pred.tex", width = 6, height = 2.5, timestamp = FALSE)
+print(p)
+dev.off()
+
+p <- ggplot(travelcard_week, aes(t, re)) +
   geom_bar(stat = 'identity', position = 'dodge') +
   labs(x = 'Time, $t$', y = 'Relative error, $re$') + 
+  scale_x_datetime(breaks = travelcard_week[(tod == 13)]$t, labels = travelcard_week[(tod == 13)]$dow) +
   scale_y_continuous(breaks = seq(-.75,.75, by = .25)) +
   theme_bw() +
   theme(
