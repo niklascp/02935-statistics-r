@@ -132,13 +132,6 @@ data <- merge(
   weather_hour, 
   by = "t")
 
-dummy_dt <- dummy(data$dt, sep = ':')
-dummy_peek <- dummy(data$peek, sep = ':')
-dummy_cond <- dummy(data$cond, sep = ':')
-data_numeric <- na.omit(data[, !c("t", "rea", "dt", "peek", "demand_group", "cond"), with=FALSE])
-data_dummy <- na.omit(cbind(data[, !c("t", "rea", "dt", "peek", "demand_group", "cond"), with=FALSE], dummy_dt, dummy_peek, dummy_cond))
-data_dummy_reduced <- na.omit(cbind(data[, !c("t", "rea", "dt", "peek", "demand_group", "cond"), with=FALSE], dummy_cond))
-
 # -------------------
 # UNIVARIATE ANALYSIS
 # -------------------
@@ -163,6 +156,10 @@ anova(lm(rea ~ dt, data = data))
 anova(lm(rea ~ peek, data = data))
 
 # Correlation matric of continous variables
+data_numeric <- na.omit(data[, !c("t", "dt", "peek", "demand_group", "cond"), with=FALSE])
+
+cormat <- cor_pmat(data_numeric)
+
 ggcorrplot(cormat, method = "circle") +
   ggsave("../plots/cor_matrix.pdf", width = 4, height = 4, units = "in")
 
@@ -182,55 +179,30 @@ tikz(file = "../plots/cor_temp.tex", width = 6, height = 3, timestamp = FALSE)
 print(p_temp)
 dev.off()
 
-
-
-
-
-
-#subgroup 
-#ggplot(data, aes(AnyRain, ErrorPctAdj)) + 
-#  geom_boxplot(notch = TRUE)
-
-ggplot(data, aes(ws, rea)) +
-  #geom_point() +
-  geom_smooth()
-
 # ----------------
 # PCA WITH DUMMIES
 # ----------------
 
-dummy_dt <- dummy(data$DayType, sep = ':')
-dummy_peek <- dummy(data$Peek, sep = ':')
-data_dummy <- na.omit(cbind(data[, !c("DateTime", "DayType", "Peek"), with=FALSE], dummy_dt, dummy_peek))
+dummy_dt <- dummy(data$dt, sep = ':')
+dummy_peek <- dummy(data$peek, sep = ':')
+dummy_cond <- dummy(data$cond, sep = ':')[,-8] # omit NA condition
 
-data_dummy_scaled <- scale(data_dummy[, !c("ErrorPctAdj", "demand_group"), with=FALSE])
-pca <- stats::prcomp(data_dummy_scaled[, -1])
+data_dummy <- na.omit(cbind(data[, !c("t", "dt", "re", "rea", "peek", "cond"), with=FALSE], dummy_dt, dummy_peek, dummy_cond))
+data_dummy_reduced <- na.omit(cbind(data[, !c("t", "dt", "peek", "demand_group", "cond"), with=FALSE], dummy_cond))
 
-ps <- ggbiplots(pca, data_dummy$ErrorPctAdj, 5)
+data_dummy_scaled <- scale(data_dummy_reduced[, !c("re", "rea"), with=FALSE])
+pca <- stats::prcomp(data_dummy_scaled)
+
+ps <- ggbiplots(pca, data_dummy_reduced$rea, 5)
 pdf(paste0("../plots/pca_loadings.pdf"), width=9, height=12)
 do.call("grid.arrange", c(ps, ncol=2))
 dev.off()
-
-# ---------------------
-# PCA WITH SEGMENTATION
-# ---------------------
-
-for (peek in unique(data[, Peek])) {
-  data_morning <- na.omit(data[Peek == peek, !c("DateTime", "DayType", "Peek"), with=FALSE])
-  data_morning_scaled <- scale(data_morning[, !c('ErrorPctAdj'), with=FALSE])
-  pca_morning <- stats::prcomp(data_morning_scaled)
-  
-  ps <- ggbiplots(pca_morning, data_morning$ErrorPctAdj, 5)
-  pdf(paste0("../plots/pca_", tolower(peek), "_loadings.pdf"), width=9, height=12)
-  do.call("grid.arrange", c(ps, ncol=2))
-  dev.off()
-}
 
 # ----------------
 # SVM WITH DUMMIES
 # ----------------
 
-data_dummy_svm <- data_dummy[, !c("ErrorPctAdj"), with=FALSE]
+data_dummy_svm <- data_dummy[, !c("cond:NA"), with=FALSE]
 
 train_dummy_svm <- data_dummy_svm[1:(.8 * nrow(data_dummy_svm))]
 test_dummy_svm <- data_dummy_svm[(.8 * nrow(data_dummy_svm)):nrow(data_dummy_svm)]
@@ -250,7 +222,7 @@ ggplot(b, aes(demand_group_pred, demand_group, fill = freq)) +
   geom_tile() +
   geom_text(aes(label=paste0(format(round(100.0 * freq, 1), format = 'f', nsmall = 1), "%"))) +
   scale_fill_gradient(low = "white", high = "red") + 
-  labs(x = Estimated Travel Demand )
+  #labs(x = "Estimated Travel Demand )
   theme_bw() +
   theme(
     axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),

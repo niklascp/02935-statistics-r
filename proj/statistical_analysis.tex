@@ -42,5 +42,28 @@ For the continues variables, a single relationship for the  is plotted, i.e.\ \g
     \label{fig:cor_temp}
 \end{figure}
 
-\subsection{Multivariate analysis}
-As PCA only works on continues variables dummy-variables is introduced for weather condition (day type, \gls{daytype_i}, and peek class, \gls{peek_i} is dropped since their contribution is non-significant cf. previous section).
+\subsection{Principal component analysis}
+As Principal component analysis (PCA) only works on continues variables a series of dummy-variables is introduced for the discrete variable weather condition \gls{cond_i}, while day type, \gls{daytype_i}, and peek class, \gls{peek_i} is dropped since their contribution is non-significant cf. previous section. The PCA is only done on the weather data, and loadings is then colored by travel demand deviation, \gls{re_i}.
+
+The dummy transformation yields a data set of total of 11 variables, which is mean centered and scaled before PCA is applied. The scree plot of the resulting 11 principal components (PC) is shown \Cref{fig:pca_screeplot}. Already from the scree plot it is evident, that the total explained variance increases quite slowly as principal components are included. Thus it suggest that the weather data set is not modeled well by the hyper-projection onto the reduced space of the PCA.
+
+Nevertheless the loadings plots is colored cf.\ \gls{re_i} and inspected. Since comparing all 11 principal components would yield 55 loadings plots, only the first 5 principal components are selected, resulting in the 10 loadings plots shown in \Cref{fig:pca_loadings}, where a blue color corresponds to a positive value of \gls{re_i} (increased demand), and red to a negative value of \gls{re_i} (decreased demand).
+
+It is hard to argue about any clear patterns in the loadings plots. The clusters formed are in all cases due to the dummy variables. Even though clusters of different kind of rains, e.g.\ as seen in PC3/PC5-plot, are more blue then the cloudy and overcast clusters, it really does not capture the multivariate correlation better than the boxplot in~\Cref{fig:cor_cond}. PCA has only been tried without the dummy-variables, but it yields only cloudy loadings plot with just as little separation between increased and decreased demand.
+
+For this reason it is argued that PCA is not an appropriate method for the multivariate analysis.
+\begin{figure}[!ht]
+    \center
+    \input{../plots/pca_screeplot.tex}
+    \caption{PCA scree plot.}
+    \label{fig:pca_screeplot}
+\end{figure}
+
+\begin{figure}[!p]
+    \center
+    \includegraphics[width=\textwidth]{../plots/pca_loadings}
+    \caption{PCA loadings for PC1--PC5.}
+    \label{fig:pca_loadings}
+\end{figure}
+
+\subsection{Support vector regression (SVR)}
