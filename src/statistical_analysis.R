@@ -7,6 +7,7 @@ library (e1071)          # Misc. functions from Probability Theory Group at TU W
 library(ggplot2)         # Beautiful plots
 library(ggfortify)       # Plots of PCA with ggplot2
 library(gridExtra)       # Grid layout for ggplot2
+library(ggcorrplot)
 library(tikzDevice)      # Beautiful plots in tex/tikz
 
 library(xtable)          # Beautiful tables in tex
@@ -74,207 +75,125 @@ traveldemand <- transform_traveldemand(traveldemand)
 
 weather <- prep_weather()
 
-# MOVE ?
-weather[,DateTime := as.POSIXct(format(DateTime, '%Y-%m-%d %H:00'))]
-weather_hour <- weather[,list(
-  TemperatureC = mean(TemperatureC, na.rm = TRUE),
-  WindSpeedKmH = max(WindSpeedKmH, na.rm = TRUE),
-  Precipitationmm = max(Precipitationmm),
-  Humidity = max(Humidity),
-  Rain = max(Rain),
-  Clear = max(Clear)
-  ), by = DateTime]
+# Aggregate weather data
+weather[,t := as.POSIXct(format(t, '%Y-%m-%d %H:00'))]
+weather_hour <- weather[, .(
+  temp = mean(temp, na.rm = TRUE),
+  pptn = max(pptn, na.rm = TRUE),
+  rh = max(rh, na.rm = TRUE),
+  ws = max(ws, na.rm = TRUE),
+  cond = ifelse(all(is.na(cond)), max(cond), max(cond, na.rm = TRUE))), by = t]
+weather_hour[, cond := ordered(cond, labels = levels(weather$cond))]
 
 # ---------------------------
 # TRAVEL DEMAND NORMALIZATION
 # ---------------------------
 
-fit <- lm(
-  CheckInCount^(1/4) ~ DayOfWeek + Hour + DayOfWeek:Hour + Day,
-  data = traveldemand)
-summary(fit)
-
-pdf("../plots/fit-assumptions.pdf", width=9, height=12)
-par(mfrow=c(4, 1))
-plot(fit, which=1:4)
-par(mfrow=c(1, 1))
-dev.off()
-
-drop1(fit, test = 'F')
-
-traveldemand$Pred <- predict(fit)^4
-traveldemand$Error <- traveldemand$CheckInCount - traveldemand$Pred
-
-eval_initial <- traveldemand[,
-                             .(
-                               RMSE = sqrt(mean(Error^2)),
-                               MAPE = mean(abs(Error / CheckInCount)) * 100
-                             ),
-                             by = .(DayType, Peek)]
-eval_initial_overall <- traveldemand[,
-                                     .(
-                                       DayType = 'Overall',
-                                       Peek = '',
-                                       RMSE = sqrt(mean(Error^2)),
-                                       MAPE = mean(abs(Error / CheckInCount)) * 100
-                                     )]
-# Export evaluation table
-eval_initial_tab <- rbind(eval_initial, eval_initial_overall, fill = T)
-names(eval_initial_tab) <- c('dt', 'peek', 'RMSE', 'MAPE (%)')
-print(xtable(eval_initial_tab),
-      type = "latex",
-      file = "../tables/model_all_eval.tex",
-      hline.after = c(0,0:(nrow(eval_initial_tab)-1),nrow(eval_initial_tab)-1),
-      include.rownames = FALSE)
-
 # M_np
 model_np <- lm(
-  CheckInCount^(1/4) ~ DayOfWeek + Hour + DayOfWeek:Hour + Day,
-  data = traveldemand[Peek == 'NO'])
-summary(model_np)
+  D^(1/4) ~ dow + tod + dow:tod + day,
+  data = traveldemand[peek == 'No Peek'])
 
-pdf("../plots/model_np_assumptions.pdf", width=9, height=12)
-par(mfrow=c(4, 1))
-plot(model_np, which=1:4)
-par(mfrow=c(1, 1))
-dev.off()
-
-drop1(model_wd_np, test = 'F')
-
-traveldemand[Peek == 'NO', Pred := predict(model_np)^4]
+traveldemand[peek == 'No Peek', D_pred := predict(model_np)^4]
 
 # M_mp
 model_mp <- lm(
-  CheckInCount^(1/4) ~ DayOfWeek + Hour + Day,
-  data = traveldemand[Peek == 'MORNING'])
-summary(model_mp)
+  D^(1/4) ~ dow + tod + day,
+  data = traveldemand[peek == 'Morning'])
 
-pdf("../plots/model_mp_assumptions.pdf", width=9, height=12)
-par(mfrow=c(4, 1))
-plot(model_mp, which=1:4)
-par(mfrow=c(1, 1))
-dev.off()
-
-drop1(model_mp, test = 'F')
-
-traveldemand[Peek == 'MORNING', Pred := (predict(model_mp)^4)]
+traveldemand[peek == 'Morning', D_pred := (predict(model_mp)^4)]
 
 # M_ap
 model_ap <- lm(
-  CheckInCount^(1/4) ~ DayOfWeek + Hour + DayOfWeek:Hour + Day,
-  data = traveldemand[Peek == 'AFTERNOON'])
-summary(model_ap)
+  D^(1/4) ~ dow + tod + dow:tod + day,
+  data = traveldemand[peek == 'Afternoon'])
 
-pdf("../plots/model_ap_assumptions.pdf", width=9, height=12)
-par(mfrow=c(4, 1))
-plot(model_ap, which=1:4)
-par(mfrow=c(1, 1))
-dev.off()
+traveldemand[peek == 'Afternoon', D_pred := predict(model_ap)^4]
 
-drop1(model_ap, test = 'F')
+# Calculate error and relative error
+traveldemand$D_error <- traveldemand$D - traveldemand$D_pred
+traveldemand$re <- traveldemand$D_error / traveldemand$D_pred
 
-traveldemand[Peek == 'AFTERNOON', Pred := predict(model_ap)^4]
+# -------------------------------
+# MERGE TRAVEL DEMAND AND WEATHER
+# -------------------------------
 
-# Recalculate error
-traveldemand$Error <- traveldemand$CheckInCount - traveldemand$Pred
-traveldemand$ErrorPct <- traveldemand$Error / traveldemand$Pred
+quantiles <- quantile(traveldemand$re, c(.05, .95))
 
-eval_independent <- traveldemand[,
-                                 .(
-                                   RMSE = sqrt(mean(Error^2)),
-                                   MAPE = mean(abs(Error / CheckInCount)) * 100
-                                 ),
-                                 by = .(DayType, Peek)]
-eval_independent_overall <- traveldemand[,
-                                     .(
-                                       DayType = 'Overall',
-                                       Peek = '',
-                                       RMSE = sqrt(mean(Error^2)),
-                                       MAPE = mean(abs(Error / CheckInCount)) * 100
-                                     )]
-# Export evaluation table
-dir.create('../tables/', showWarnings = FALSE)
-eval_independent_tab <- rbind(eval_independent, eval_independent_overall, fill = T)
-names(eval_independent_tab) <- c('dt', 'peek', 'RMSE', 'MAPE (%)')
-print(xtable(eval_independent_tab),
-      type = "latex",
-      file = "../tables/model_independent_eval.tex",
-      hline.after = c(0,0:(nrow(eval_initial_tab)-1),nrow(eval_initial_tab)-1),
-      include.rownames = FALSE)
+traveldemand[, demand_group := factor(cut(re, quantile(traveldemand$re, c(0, 1/3, 2/3, 1))), labels = c('Low', 'Normal', 'High'))]
 
-travelcard_week <- traveldemand[('2016-10-03' <= Date) & (Date <= '2016-10-09')]
-
-p <- ggplot(travelcard_week, aes(DateTime, CheckInCount)) +
-  geom_bar(stat = 'identity') +
-  geom_line(aes(y = Pred, color = 'Est. Travel Demand, $\\widehat{D}$'), color = 'red') +
-  labs(x = 'Time, $t$', y = 'Travel Demand, $D$') + 
-  scale_x_datetime(breaks = travelcard_week[(Hour == 12)]$DateTime, labels = travelcard_week[(Hour == 13)]$DayOfWeek) +
-  theme_bw() +
-  theme(
-    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
-    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
-  )
-
-p
-
-tikz(file = "../plots/travelcard_pred.tex", width = 6, height = 2.5, timestamp = FALSE)
-print(p)
-dev.off()
-
-p <- ggplot(travelcard_week, aes(DateTime, ErrorPct)) +
-  geom_bar(stat = 'identity', position = 'dodge') +
-  labs(x = 'Time, $t$', y = 'Relative error, $re$') + 
-  scale_x_datetime(breaks = travelcard_week[(Hour == 12)]$DateTime, labels = travelcard_week[(Hour == 13)]$DayOfWeek) +
-  scale_y_continuous(breaks = seq(-.75,.75, by = .25)) +
-  theme_bw() +
-  theme(
-    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
-    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
-  )
-
-p
-
-tikz(file = "../plots/travelcard_error_pct.tex", width = 6, height = 3, timestamp = FALSE)
-print(p)
-dev.off()
-
-
-quantiles <- quantile(traveldemand$ErrorPct, c(.05, .95))
-
-traveldemand[, demand_group := factor(cut(ErrorPct, quantile(traveldemand$ErrorPct, c(0, 1/3, 2/3, 1))), labels = c('Low', 'Normal', 'High'))]
-
-traveldemand$ErrorPctAdj <- traveldemand$ErrorPct
-traveldemand[ErrorPct < quantiles[1], ErrorPctAdj := quantiles[1]]
-traveldemand[ErrorPct > quantiles[2], ErrorPctAdj := quantiles[2]]
+traveldemand$rea <- traveldemand$re
+traveldemand[re < quantiles[1], rea := quantiles[1]]
+traveldemand[re > quantiles[2], rea := quantiles[2]]
 summary(traveldemand$ErrorPctAdj)
 
 data <- merge(
-  traveldemand[, list(DateTime, DayType, Peek, ErrorPctAdj, demand_group)], 
+  traveldemand[, list(t, dt, peek, re, rea, demand_group)], 
   weather_hour, 
-  by = "DateTime")
+  by = "t")
 
-ggplot(data, aes(factor(Clear, labels = c('No', 'Yes')), ErrorPctAdj, group = Clear)) +
-  geom_boxplot(notch = T)
+dummy_dt <- dummy(data$dt, sep = ':')
+dummy_peek <- dummy(data$peek, sep = ':')
+dummy_cond <- dummy(data$cond, sep = ':')
+data_numeric <- na.omit(data[, !c("t", "rea", "dt", "peek", "demand_group", "cond"), with=FALSE])
+data_dummy <- na.omit(cbind(data[, !c("t", "rea", "dt", "peek", "demand_group", "cond"), with=FALSE], dummy_dt, dummy_peek, dummy_cond))
+data_dummy_reduced <- na.omit(cbind(data[, !c("t", "rea", "dt", "peek", "demand_group", "cond"), with=FALSE], dummy_cond))
+
+# -------------------
+# UNIVARIATE ANALYSIS
+# -------------------
+
+# Correlation of cond
+p_cond <- ggplot(data, aes(cond, rea, group = cond)) +
+  geom_boxplot(notch = F) +
+  labs(x = 'Weather condition, $\\mathit{cond}$', y = 'Relative error, $\\mathit{re}$') +
+  theme_bw() +
+  theme(
+    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
+    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
+  )
+
+tikz(file = "../plots/cor_cond.tex", width = 6, height = 3, timestamp = FALSE)
+print(p_cond)
+dev.off()
+
+# Anova of discrete variables
+anova(lm(rea ~ cond, data = data))
+anova(lm(rea ~ dt, data = data))
+anova(lm(rea ~ peek, data = data))
+
+# Correlation matric of continous variables
+ggcorrplot(cormat, method = "circle") +
+  ggsave("../plots/cor_matrix.pdf", width = 4, height = 4, units = "in")
+
+# Correlation of temp
+p_temp <- ggplot(data, aes(temp, rea)) +
+  geom_smooth() +
+  labs(x = 'Temperature, $\\mathit{temp}$', y = 'Relative error, $\\mathit{re}$') +
+  theme_bw() +
+  theme(
+    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
+    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
+  )
+
+p_temp
+
+tikz(file = "../plots/cor_temp.tex", width = 6, height = 3, timestamp = FALSE)
+print(p_temp)
+dev.off()
 
 
-fit_clear <- lm(ErrorPctAdj ~ factor(Clear), data = data)
-anova(fit_clear)
 
-ggplot(data, aes(WindSpeedKmH, ErrorPctAdj)) +
-  geom_point() +
+
+
+
+#subgroup 
+#ggplot(data, aes(AnyRain, ErrorPctAdj)) + 
+#  geom_boxplot(notch = TRUE)
+
+ggplot(data, aes(ws, rea)) +
+  #geom_point() +
   geom_smooth()
-
-ggplot(data, aes(Rain, ErrorPctAdj, group = Rain)) +
-  geom_boxplot()
-
-data[Rain == 0, AnyRain := 'No']
-data[Rain > 0, AnyRain := 'Yes']
-
-ggplot(data, aes(AnyRain, ErrorPctAdj)) + 
-  geom_boxplot(notch = TRUE)
-
-fit_anyrain <- lm(ErrorPctAdj ~ AnyRain, data = data)
-anova(fit_anyrain)
 
 # ----------------
 # PCA WITH DUMMIES

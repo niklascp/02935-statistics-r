@@ -1,0 +1,42 @@
+%!TEX root = proj.tex
+
+\subsection{Weather data}\label{ch:desc_weather}
+Historical weather data was obtained and prepared as described in \Cref{appx:weather_data_prep}. The preprocessed weather data is a more advanced time series containing several measurements for each time step. \Cref{tab:weather_data_attr} shows the attributes in the weather data set, and \Cref{tab:weather_data_example} shows an example of the data set.
+
+\begin{table}[!ht]
+    \center
+    \begin{tabular}{p{.7in}p{4.5in}}        
+        Attribute & Description \\
+        \hline 
+        \hline 
+        \gls{t_i} & \glsdesc{t_i} \\
+        \hline         
+        \gls{temp_i} &  \glsdesc{temp_i}  \\
+        \hline         
+        \gls{pptn_i} & \glsdesc{pptn_i}\\
+        \hline         
+        \gls{rh_i} & \glsdesc{rh_i} \\
+        \hline         
+        \gls{ws_i} & \glsdesc{ws_i} \\
+        \hline         
+        \gls{cond_i} & \glsdesc{cond_i} \\
+    \end{tabular}
+    \caption{Attributes in the travel demand data set.}
+    \label{tab:weather_data_attr}
+\end{table}
+
+\begin{table}[!ht]
+    \center
+    \input{../tables/weather_data_example.tex}
+    \caption{Example of the weather data set.}
+    \label{tab:weather_data_example}
+\end{table}
+
+Weather conditions seems quite sparse, e.g.\ as shown in \Cref{fig:weather_hist} rain conditions are only observed $\approx12 \%$ of the time, and show $<3 \%$ of the time. And in the vast majority of time it is raining the rain condition is considered \emph{light}.
+
+\begin{figure}[!ht]
+    \center
+    \input{../plots/weather_hist.tex}
+    \caption{Frequency of different levels of rain.}
+    \label{fig:weather_hist}
+\end{figure}

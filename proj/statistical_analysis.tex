@@ -1,0 +1,46 @@
+%!TEX root = proj.tex
+
+\section{Statistical analysis}
+In the previous sections the two data sets have been presented, including descriptive statistics of each of them. Furthermore a normalized measure for travel demand deviations from the normal pattern, \gls{re_i}, has been modeled and checked. With this, the statistical analysis of the impact of weather on travel demand can be conducted.
+
+\subsection{Merge of weather and travel demand}
+Recall from \Cref{ch:desc_weather} that the weather time series have three time steps within each hour, while travel demand has only one measurement per hour. In order to merge the two data sets the weather time series is aggregated to the same granularity as described in \Cref{eq:weather_aggr}.
+\begin{align}
+	\mathit{temp}_i &= \mathrm{mean}(\mathit{temp}_j, \mathit{temp}_{j + 1}, \mathit{temp}_{j + 2}) &\text{where} \; t_i = t_j \\
+	\mathit{pptn}_i &= \mathrm{max}(\mathit{pptn}_j, \mathit{pptn}_{j + 1}, \mathit{pptn}_{j + 2}) &\text{where} \; t_i = t_j \\
+	\mathit{rh}_i &= \mathrm{max}(\mathit{rh}_j, \mathit{rh}_{j + 1}, \mathit{rh}_{j + 2}) &\text{where} \; t_i = t_j \\
+	\mathit{ws}_i &= \mathrm{max}(\mathit{ws}_j, \mathit{ws}_{j + 1}, \mathit{ws}_{j + 2}) &\text{where} \; t_i = t_j \\
+	\mathit{cond}_i &= \mathrm{max}(\mathit{cond}_j, \mathit{cond}_{j + 1}, \mathit{cond}_{j + 2}) &\text{where} \; t_i = t_j 
+	\label{eq:weather_aggr}
+\end{align}
+
+\subsection{Univariate analysis}
+Before going into the multivariate analysis, it is desirable to look for  of the correlations between the pairs of variables. \Cref{fig:cor_matrix} shows visualizes the correlation matrix of the numeric variables (e.g.\ without weather condition, \gls{cond_i}, day type, \gls{daytype_i}, and peek class, \gls{peek_i}). There are no clear linear correlations between pairs that surfaces, only a week correlation between wind speed, \gls{ws_i}, and \gls{re_i}, and a even more week correlation between temperature, \gls{temp_i}, and \gls{re_i}. 
+
+The discrete variables (weather condition, \gls{cond_i}, day type, \gls{daytype_i}, and peek class, \gls{peek_i}) is investigated using ANOVA to test whether they contribute to \gls{re_i}. It is found with strong evidence ($F = 38.147, p < 0.001$) that the weather condition is influencing the travel demand, and the relationship is shown in \Cref{fig:cor_cond}. This is of cause not that surprising, and expected that rain impacts with an increased travel demand. On the other hand is cannot been shown that day type, \gls{daytype_i}, and peek class, \gls{peek_i}, has influence ($F =  0.1395, p = 0.709$ respectable $F =  0.0463, p = 0.955$), i.e.\ the weather condition impacts similarly regardless of people are on their way to work or using public transport for leisure rides, which is interesting.
+
+For the continues variables, a single relationship for the  is plotted, i.e.\ \gls{temp_i} and \gls{re_i} as shown in \Cref{fig:cor_temp} there is evidence that there exists a more complex relationship. For instance \Cref{fig:cor_temp} indicates that smaller freezing temperatures (i.e. between $-5^{\circ}$ to $0^{\circ}$) impacts with a increased travel demand, while more freezing temperatures (i.e. below $-5^{\circ}$) impacts with a reduced travel demand. This supports that a multivariate analysis is required to explain the weather impact on travel demand.
+
+\begin{figure}[!ht]
+    \center
+    \includegraphics{../plots/cor_matrix}
+    \caption{Correlation matrix visualization.}
+    \label{fig:cor_matrix}
+\end{figure}
+
+\begin{figure}[!ht]
+    \center
+    \input{../plots/cor_cond.tex}
+    \caption{Correlation between weather conditions and relative error.}
+    \label{fig:cor_cond}
+\end{figure}
+
+\begin{figure}[!ht]
+    \center
+    \input{../plots/cor_temp.tex}
+    \caption{Correlation between temperature and relative error.}
+    \label{fig:cor_temp}
+\end{figure}
+
+\subsection{Multivariate analysis}
+As PCA only works on continues variables dummy-variables is introduced for weather condition (day type, \gls{daytype_i}, and peek class, \gls{peek_i} is dropped since their contribution is non-significant cf. previous section).

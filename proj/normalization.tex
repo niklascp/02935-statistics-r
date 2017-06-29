@@ -1,0 +1,88 @@
+%!TEX root = proj.tex
+
+\section{Normalization of travel demand}
+As etablished by the descriptive analysis of travel demand data in \Cref{ch:desc_traveldemand}, the expected demand varies throughout the time of the day, and the day of the week. In order to find any impacts of weather we must focus on deviations from the normal and expected pattern.
+
+Once we have presented our models, we want to evaluate them using the following measures: \emph{mean absolute percentage error} (MAPE) and \emph{root mean square error} (RMSE) cf.~\Cref{eq:mape,eq:rmse}.
+\vspace{-2em}
+\begin{multicols}{2}
+\begin{equation}
+    \textrm{MAPE}(D, \widehat{D}) = \frac{1}{n} \sum_{i = 1}^{n} \left| \frac{\gls{D_i} - \gls{D_i_pred}}{\gls{D_i}} \right| 
+    \label{eq:mape} 
+\end{equation}
+\break
+\vspace{-6.5pt}
+\begin{equation}
+    \textrm{RMSE}(D, \widehat{D}) = \sqrt{\frac{\sum_{i = 1}^{n} \gls{D_i} - \gls{D_i_pred}}{n}}
+    \label{eq:rmse}
+\end{equation}
+\end{multicols}
+
+\subsection{Modeling with single LR-model}
+The initial approach for this is to fit a \emph{single} linear regression (LR) model, $\mathcal{M}_\star$ on the \emph{entire} travel demand data, using time of the day, \gls{hour_i}, day of the week, \gls{dow_i}, their interaction, along with the overall day measure, \gls{day_i}, as shown in~(\ref{eq:fit}). The intuition about this approach is to let the model capture as much as possible of the travel demand variation that can be explained by the observations being measured at different times. The last term, \gls{day_i}, allows for the capture of an overall increase/decline of travel demand. 
+\begin{equation}
+    \mathcal{M}_\star \models \sqrt[\leftroot{0}\uproot{2}4]{\textit{\gls{D_i}}} \sim \gls{dow_i} + \gls{hour_i} + \gls{dow_i}:\gls{hour_i} + \gls{day_i}  
+    \label{eq:fit}
+\end{equation}
+
+Notice that we transform the response to the fourth root of the travel demand. This is to ensure homoscedasticity of error. We verify that model assumptions hold using \Cref{fit-assumptions}. From the \emph{Residuals vs Fitted}-plot we see linear behavior, and normal error is also acceptable cf. \emph{Normal Q-Q}-plot. Constant variance of error is also confirmed by the uniform spread in the \emph{Scale-Location}-plot. Finally we might identify some outliers in the \emph{Residuals vs Fitted}-plot, but as outliers is part of what we are trying to identify (e.g.\ any non-normal travel demand), we will not remove any of them. Finally we confirm that all terms are contributing statistically significant to the model, i.e.\ no non-significant terms can be dropped from the model.
+
+\begin{figure}[!p]
+    \center
+    \includegraphics[width=\textwidth]{../plots/fit-assumptions}    
+    \caption{Plots for confirming model assumptions.}    
+    \label{fit-assumptions}
+\end{figure}
+
+With model assumptions checked, the model is evaluated cf.\ \Cref{tab:model_star_eval}. It is seen that the model captures quite well on the surface, with an overall MAPE of 12\% and RMSE of\ $~70$~passengers. There are however large deviations in the  of the different {day types}, \gls{daytype_i}, and {peek classes}, \gls{peek_i}.
+\begin{table}[!ht]
+    \center
+    \input{../tables/model_star_eval.tex}
+    \caption{Evaluation of initial model approach.}
+    \label{tab:model_star_eval}
+\end{table}
+
+\subsection{Modeling using multiple independent models}
+Different configurations of independent sub-models is investigated by dividing the travel demand data set based on \gls{daytype_i} and \gls{peek_i}, and the combination of both. It is found that the best results are achieved by segmenting by \gls{peek_i}. Based on this three models are defined cf.\ \Cref{eq:model_np,eq:model_mp,eq:model_ap}. Notice that model-selection revealed that the interaction-term $\gls{dow_i}:\gls{hour_i}$ is not significant for $\mathcal{M}_{\textsc{Morning}}$, and has thus been dropped from the model.
+\begin{align}
+\mathcal{M}_{\textsc{No}} &\models \sqrt[\leftroot{0}\uproot{2}4]{\textit{\gls{D_i}}} \sim \gls{dow_i} + \gls{hour_i} + \gls{dow_i}:\gls{hour_i} + \gls{day_i} &\text{for} \; \gls{peek_i} = \textsc{No} \label{eq:model_np} \\
+\mathcal{M}_{\textsc{Morning}} &\models \sqrt[\leftroot{0}\uproot{2}4]{\textit{\gls{D_i}}} \sim \gls{dow_i} + \gls{hour_i} + \gls{day_i}  &\text{for} \; \gls
+{peek_i} = \textsc{Morning}  \label{eq:model_mp} \\
+\mathcal{M}_{\textsc{Afternoon}} &\models \sqrt[\leftroot{0}\uproot{2}4]{\textit{\gls{D_i}}} \sim \gls{dow_i} + \gls{hour_i} + \gls{dow_i}:\gls{hour_i} + \gls{day_i}  &\text{for} \; \gls{peek_i} = \textsc{Afternoon}  \label{eq:model_ap}
+\end{align}
+
+Once again model assumptions are checked using plots (See~\Cref{appx:model_assumptions}) and are accepted, although the acceptance of normal errors is weak for $\mathcal{M}_{\textsc{Morning}}$. The evaluation result is shown in~\Cref{tab:model_independent_eval}, and while the segmentation does improves the MAPE and RMSE, the improvements are minor. Only $\textsc{Weekday}/\textsc{Morning}$ seems to benefit noticeably, while RMSE for $\textsc{Weekday}/\textsc{No Peek}$ actually sees a minimal decline.
+\begin{table}[!ht]
+    \center
+    \input{../tables/model_independent_eval.tex}
+    \caption{Evaluation of multiple independent models approach.}
+    \label{tab:model_independent_eval}
+\end{table}
+
+\subsection{Model application}
+The model is then applied to the data, yielding the estimated travel demand~\gls{D_i_pred}, as illustrated in the example in \Cref{fig:travelcard_pred}, which simply shows the first whole week in the data set (``Monday, October 3, 2016''--``Sunday, October 9, 2016'').
+\begin{figure}[!ht]
+    \center
+    \input{../plots/travelcard_pred.tex}
+    \vspace{-1em}
+    \caption{Predicted passenger boardings of a single week.}
+    \label{fig:travelcard_pred}
+\end{figure}
+
+\begin{align}
+    \mathit{re}_i &= \frac{D_i - \widehat{D_i}}{\widehat{D_i}}
+    \label{eq:error}
+\end{align}
+
+From the estimated travel demand, the relative error, \gls{re_i}, is calculated cf.~\Cref{eq:error}. This value can be interpreted as the percentage the $i$'th observation deviates from the expected travel pattern, as explained by the linear regression model.\ I.e.\ a clear positive value of \gls{re_i} indicates \emph{higher} travel demand than the \emph{normal conditions} can explain, and likewise a clear negative value indicates \emph{lower} demand than normal, while values around 0 indicates \emph{normal} behavior.
+
+
+\Cref{fig:travelcard_error_pct} exemplifies the value of \gls{re_i} on the same subeset of the time series as shown in \Cref{fig:travelcard_pred}, i.e.\ the first whole week in the data set. From the plot it can be \todo{Finish}
+
+\begin{figure}[!ht]
+    \center
+    \input{../plots/travelcard_error_pct.tex}
+    \vspace{-1em}
+    \caption{Error percentage of a single week.}
+    \label{fig:travelcard_error_pct}
+\end{figure}

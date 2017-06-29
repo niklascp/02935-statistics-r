@@ -17,12 +17,12 @@ write_example_weather(weather)
 # PLOTS FOR DESCRIPTIVE ANALYSIS
 # ------------------------------
 
-rain_freq <- weather[, .N, by = Rain][, Freq := N/sum(N)]
+cond_freq <- weather[, .N, by = cond][, freq := N/sum(N)]
 
-p <- ggplot(rain_freq[Rain > 0], 
-            aes(x = factor(Rain, labels = rain_levels()), y = Freq)) +
+p <- ggplot(cond_freq, 
+            aes(x = cond, y = freq)) +
   geom_bar(stat = 'identity') +
-  labs(x = 'Level of rain', y = 'Frequency') +
+  labs(x = 'Condition, $\\mathit{cond}$', y = 'Frequency') +
   theme_bw() +
   theme(
     axis.text.x=element_text(angle = 45, margin=margin(30,0,0,0)),
@@ -34,6 +34,7 @@ p
 tikz(file = "../plots/weather_hist.tex", width = 6, height = 3, timestamp = FALSE)
 print(p)
 dev.off()
+
 
 
 #par(mfrow=c(2, 2))
