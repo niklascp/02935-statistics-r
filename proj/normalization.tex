@@ -34,7 +34,7 @@ Notice that we transform the response to the fourth root of the travel demand. T
     \label{fit-assumptions}
 \end{figure}
 
-With model assumptions checked, the model is evaluated cf.\ \Cref{tab:model_star_eval}. It is seen that the model captures quite well on the surface, with an overall MAPE of 12\% and RMSE of\ $~70$~passengers. There are however large deviations in the  of the different {day types}, \gls{daytype_i}, and {peek classes}, \gls{peek_i}.
+With model assumptions checked, the model is evaluated cf.\ \Cref{tab:model_star_eval}. It is seen that the model captures quite well on the surface, with an overall MAPE of 11.7\% and RMSE of\ $~71$~passengers. There are however large deviations in the  of the different {day types}, \gls{daytype_i}, and {peek classes}, \gls{peek_i}.
 \begin{table}[!ht]
     \center
     \input{../tables/model_star_eval.tex}
@@ -51,7 +51,7 @@ Different configurations of independent sub-models is investigated by dividing t
 \mathcal{M}_{\textsc{Afternoon}} &\models \sqrt[\leftroot{0}\uproot{2}4]{\textit{\gls{D_i}}} \sim \gls{dow_i} + \gls{hour_i} + \gls{dow_i}:\gls{hour_i} + \gls{day_i}  &\text{for} \; \gls{peek_i} = \textsc{Afternoon}  \label{eq:model_ap}
 \end{align}
 
-Once again model assumptions are checked using plots (See~\Cref{appx:model_assumptions}) and are accepted, although the acceptance of normal errors is weak for $\mathcal{M}_{\textsc{Morning}}$. The evaluation result is shown in~\Cref{tab:model_independent_eval}, and while the segmentation does improves the MAPE and RMSE, the improvements are minor. Only $\textsc{Weekday}/\textsc{Morning}$ seems to benefit noticeably, while RMSE for $\textsc{Weekday}/\textsc{No Peek}$ actually sees a minimal decline.
+Once again model assumptions are checked using plots (See~\Cref{appx:model_assumptions}) and are accepted, although the acceptance of normal errors is weak for $\mathcal{M}_{\textsc{Morning}}$. The evaluation result is shown in~\Cref{tab:model_independent_eval}, and while the segmentation does improves the MAPE and RMSE, the improvements are minor. Only $\textsc{Weekday}/\textsc{Morning}$ seems to benefit noticeably, while RMSE for $\textsc{Weekday}/\textsc{No Peek}$ actually sees a minimal increase.
 \begin{table}[!ht]
     \center
     \input{../tables/model_independent_eval.tex}
@@ -77,7 +77,7 @@ The model is then applied to the data, yielding the estimated travel demand~\gls
 From the estimated travel demand, the relative error, \gls{re_i}, is calculated cf.~\Cref{eq:error}. This value can be interpreted as the percentage the $i$'th observation deviates from the expected travel pattern, as explained by the linear regression model.\ I.e.\ a clear positive value of \gls{re_i} indicates \emph{higher} travel demand than the \emph{normal conditions} can explain, and likewise a clear negative value indicates \emph{lower} demand than normal, while values around 0 indicates \emph{normal} behavior.
 
 
-\Cref{fig:travelcard_error_pct} exemplifies the value of \gls{re_i} on the same subeset of the time series as shown in \Cref{fig:travelcard_pred}, i.e.\ the first whole week in the data set. From the plot it can be \todo{Finish}
+\Cref{fig:travelcard_error_pct} exemplifies the value of \gls{re_i} on the same subeset of the time series as shown in \Cref{fig:travelcard_pred}, i.e.\ the first whole week in the data set. From the plot it can be seen, that the Monday in general had an increased travel demand, while the weekdays from Thuesday until Friday experienced a lower travel demand than usual. The pattern in the weekend is not that clear.
 
 \begin{figure}[!ht]
     \center

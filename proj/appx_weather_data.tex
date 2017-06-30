@@ -7,4 +7,35 @@ Historical weather data are unfortunately often still considered an asset, and t
 
 \emph{Weather Underground}\footnote{https://www.wunderground.com/} provides world covering weather forecasts and therefore has huge amount of historical weather data. They have an API, which also includes a free student/research plan, which gives (limited) access to historical weather data. Because the API only allows querying for on day at a time, a small \emph{Python} script was written to scrap the API for 6 months of historical weather data between October 2017 and March 2017.
 
-\subsubsection{Feature extraction}
+The data was prepossessed, where some weather conditions were consolidated to simplify the analysis, and because they were too sparse independently as shown in \Cref{tab:consolidated_cond}.
+
+\begin{table}[!ht]
+\center
+\begin{tabular}{ll}
+	Source Condition & Consolidated Condition \\ \hline \hline 
+	Light Drizzle & Light Rain \\
+	Light Rain Showers & Light Rain \\
+	Light Rain & Light Rain \\
+	Light Freezing Drizzle & Light Rain \\ \hline
+	Drizzle  & Rain \\
+	Rain Showers & Rain \\
+	Rain & Rain \\
+	Freezing Drizzle & Rain \\
+	Freezing Rain & Rain \\ \hline
+	Heavy Drizzle & Heavy Rain \\
+	Heavy Rain Showers & Heavy Rain \\
+	Heavy Rain & Heavy Rain \\
+	Heavy Freezing Drizzle & Heavy Rain \\ \hline
+	Light Snow Showers & Snow \\
+	Light Snow & Snow \\
+	Snow & Snow \\ 
+	Heavy Snow & Snow \\ \hline
+	Clear & Clear \\ \hline
+	Scattered Clouds & Cloudy \\
+	Partly Cloudy & Cloudy \\ \hline
+	Mostly Cloudy & Overcast \\ 
+	Overcast & Overcast \\ \hline
+\end{tabular}
+\caption{Consolidated weather consolidated.}
+\label{tab:consolidated_cond}
+\end{table}

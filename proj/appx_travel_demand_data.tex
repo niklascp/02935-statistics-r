@@ -3,7 +3,7 @@
 \subsection{Acquisition and preparation of travel demand data}
 \label{appx:travel_demand_data_prep}
 
-Getting a appropriate measures of travel demand is a non-trivial task in itself\todo{cite?}. For this project two data sources was considered:
+Getting a appropriate measures of travel demand is a non-trivial task in itself. For this project two data sources was considered:
 \begin{itemize}
     \item The Danish national smart-card ticketing system, \emph{Rejsekort}, which is installed in every vehicle. Boardings are recorded as passengers \emph{check in} using their smart-card.
     \item The camera-based \emph{automatic people counting} (APC) systems that are installed in a subset of vehicles. Boardings are recorded using image analysis of cameras mounted over the doors.
@@ -12,5 +12,5 @@ Getting a appropriate measures of travel demand is a non-trivial task in itself\
 Both systems has limitations though. Obviously the APC system suffers from only measuring a small sample ($<8\%$ of departures), and thus the the chance of having measurements for extreme weather conditions is reduced.
 
 On the other hand, boarding data from the Danish national smart-card ticketing system, \emph{Rejsekort}, is installed in every vehicle. But as several other ticket types are also available (Cash-tickets, Season Passes, Mobile Apps, etc.), it does not give a complete boarding measure. Compared to the sample from the APC system, the smart-card ticketing system only accounts for~$\approx 24\%$ of passenger boardings.
-\todo{Connect}
-Data from the smart-card ticketing system for the period between October 2017 and March 2017 was selected.
+
+Because the smart-card ticketing system represents a larger sample, data from the smart-card ticketing system for the period between October 2017 and March 2017 was selected, with the exception of Christmas days (2016-12-23 to 2017-01-01) as they are not official statutory holidays, but have very different travel pattern.

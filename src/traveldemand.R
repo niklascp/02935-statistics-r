@@ -18,7 +18,7 @@ write_example_traveldemand <- function(traveldemand)
   dir.create('../tables/', showWarnings = FALSE)
   
   # Export example table
-  traveldemand_tab <- copy(traveldemand[, !c("date"), with=FALSE])
+  traveldemand_tab <- copy(traveldemand)
   traveldemand_tab$t <- format(traveldemand_tab$t, format = '%Y-%m-%d %H:%M')
   colnames(traveldemand_tab) <- paste0('$\\mathit{', colnames(traveldemand_tab), '}$')
   
@@ -44,11 +44,7 @@ prep_traveldemand <- function() {
   traveldemand$dow <- factor(traveldemand$dow, 
                              labels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"))
   traveldemand$tod <- factor(traveldemand$tod)
-  traveldemand
-}
-
-transform_traveldemand <- function(traveldemand)
-{
+  
   traveldemand$day <- as.integer(traveldemand$date - min(traveldemand$date))
   
   traveldemand[, dt := 'Weekday']
@@ -61,5 +57,12 @@ transform_traveldemand <- function(traveldemand)
   traveldemand[dt == 'Weekday' & tod %in% c('15', '16', '17'), peek := 'Afternoon']
   traveldemand$peek = factor(traveldemand$peek)
   
-  traveldemand
+  traveldemand[, date := NULL]
+  setcolorder(traveldemand, c("t",
+                              "tod",
+                              "dow",
+                              "day",
+                              "dt",
+                              "peek",
+                              "D"))
 }

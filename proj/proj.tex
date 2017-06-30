@@ -98,7 +98,7 @@
 \newglossaryentry{peek_i}
 {
   name=\ensuremath{\mathit{peek}_i},
-  description={is the peek class of the $i$'th observation, i.e.\ \textsc{No Peek}, \textsc{Morning}, or \textsc{Afternoon}}
+  description={is the peek class of the $i$'th observation, i.e.\ \textsc{No Peek}, \textsc{Morning}, or \textsc{Afternoon}. \textsc{Morning} peeks are \textsc{Weekdays} between 7--9, while \textsc{Afternoon} peeks are \textsc{Weekdays} between 15--18}
 }
 
 \newglossaryentry{temp_i}
@@ -154,36 +154,29 @@
 
 Observing and predicting the demand for bus travel is of major impact for designing and operating an efficient public transport system in any urban area. It is a common understanding, that there are several external factors that impact the travel demand. Examples include weather, events, etc. It is however uncertain how much each factor really contributes to fluctuation in travel demand. 
 
-This project aims to shed light upon the impact of specifically weather as an external factor for bus travel demand. The goal is to visualize and understand the data described in the following, and to show if any significant correlations between the datasets exists. Finally an simple model for travel demand prediction should be build in R.
 
 \subsection{Related work}\label{ch:relatedWork}
-The impact of weather conditions on transport is a well-studied area within the scientific field of transport modeling.
-TODO
+The impact of weather conditions on transport is a well-studied area within the scientific field of transport modeling. Notable work include \citet{Lam2008}, who presents a model for link travel time using weather conditions with different rainfall intensities. Their work does not focus on public transportation system, but only on the road network level, and their modeling approach is a self-designed, domain specific, method for estimating OD (Origin/Destination) travel demand.
+Likewise \citet{Yo2010} presents two-stage models for travel time prediction by composing respectively support vector machines (SVM) and artificial neural networks (ANN) with the Kalman filtering technique. They do include weather conditions, but only in the form of binary indicators for sunny days and rainy days are considered. 
 
-For weather conditions, only sunny days and rainy days are considered: \citet{Yo2010}
+\subsection{Objective and scope}\label{ch:objective}
+This reports aims to shed light upon the impact of specifically weather as an external factor for bus travel demand. The goal is to visualize and understand the data described in \Cref{ch:desc}, and to show if any significant correlations between the datasets exists.
 
+\begin{itemize}
+    \item How much does different weather conditions and weather measurements impact the travel demand in the public transport system?
+    \item Can increased/decreased demand be predicted using weather forecasts?
+\end{itemize}
 
-
-
-\subsection{Objective and scientific question}\label{ch:objective}
-
-\subsection{Scope}\label{ch:scope}
-For the sake of simplicity the analysis is expected to be limited to a single geographical area (i.e. Copenhagen) and one bus line (i.e. 5A). 
+For the sake of simplicity the analysis is expected to be limited to a single geographical area (i.e. Copenhagen) and one bus line (i.e. 5A). Furthermore the period of analysis is restricted to October 1, 2016 to March 31, 2017. 
 
 \subsection{Statistical programming and reproducibility}\label{ch:reproducibility}
-The statistical programming for this work is implemented using the R programming language \citep{R}. All work conducted for this statistical report is open and freely available at \url{https://github.com/niklascp/02935-statistics-r}, including program source code and full result sets. 
-
-This allows reproducibility of results and transparency of applied methods.
-
-
-
+The statistical programming for this work is implemented using the R programming language \citep{R}. All work conducted for this statistical report is open and freely available at \url{https://github.com/niklascp/02935-statistics-r}, including program source code and full result sets. This allows reproducibility of results and transparency of applied methods.
 \clearpage
 
 \section{Data description}\label{ch:desc}
 As established earlier, the goal of this project is to shed light upon the impact of specifically weather as an external factor for bus travel demand. For this, both historical weather data, and measures of historical travel demand should be analyzed.
 
 \input{desc_traveldemand.tex}
-\clearpage
 
 \input{desc_weather.tex}
 \clearpage
@@ -198,7 +191,7 @@ As established earlier, the goal of this project is to shed light upon the impac
 The use of a linear regression model (LR) for modeling the expected variations in the travel demand pattern, i.e.\ the normal condition, seem reasonable as supported by a low MAPE around 10 \%. It is though probably easy to improve this with more advanced regression models, e.g.\ support vector regression (SVR) or artificial neural networks (ANN), but this will compromise the interpretability of the simple LR-model.
 
 The application of PCA did not yield any clear patterns of clusterings with respect to detection between increased and decreased demand deviation, and it is probably not appropriate method for this multivariate
-problem, as the weather data set does not project well to any lower sub-spaces. This was shown by scree and loading plots. Instead an attempt for use of support vector machines (SVM) was made, and even though the model was not optimized (i.e. hyper-parameter tuning), it showed promising results.
+problem, as the weather data set does not project well to any lower sub-spaces. This was shown by scree and loading plots. Instead an attempt for use of support vector machines (SVM) was made, and even though the model was not optimized (i.e. hyper-parameter tuning), it showed some capabilities for predicting high/low/normal demand from unseen weather data.
 
 \subsection{Future work}
 Future work should increase the precision of the prediction as well as test for changes between different geospatial areas (e.g.\ rural areas vs.\ suburban areas). Finally more external factors besides weather can be included, e.g.\ events.

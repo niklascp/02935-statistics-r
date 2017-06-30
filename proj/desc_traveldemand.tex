@@ -2,7 +2,7 @@
 
 \subsection{Travel demand data}\label{ch:desc_traveldemand}
 
-Travel demand data was obtained and prepared as described in \Cref{appx:travel_demand_data_prep}. The preprocessed travel demand data is a quite simple time series containing number of passenger boardings for each date, time in terms of the hour of the day, and date of week. \Cref{tab:travel_demand_data_attr} shows the attributes in the travel demand date set, and \Cref{tab:travel_demand_data_example} shows an example of the data set.
+Travel demand data was obtained and prepared as described in \Cref{appx:travel_demand_data_prep}. The preprocessed travel demand data is a quite simple time series containing number of passenger boardings for each date, time in terms of the hour of the day, and date of week. \Cref{tab:travel_demand_data_attr} shows the attributes in the travel demand date set, and \Cref{tab:travel_demand_data_example} shows an example of the data set. Notice that \gls{day_i}, \gls{daytype_i}, and \gls{peek_i} are simply calculated measures that will come in handy later in the analysis.
 
 \begin{table}[!ht]
     \center
@@ -13,8 +13,14 @@ Travel demand data was obtained and prepared as described in \Cref{appx:travel_d
         \gls{t_i} & \glsdesc{t_i} \\
         \hline 
         \gls{hour_i} & \glsdesc{hour_i} \\
-        \hline 
+        \hline         
         \gls{dow_i} & \glsdesc{dow_i} \\
+        \hline 
+        \gls{day_i} & \glsdesc{day_i} \\
+        \hline 
+        \gls{daytype_i} & \glsdesc{daytype_i} \\
+        \hline 
+        \gls{peek_i} & \glsdesc{peek_i} \\
         \hline 
         \gls{D_i} & \glsdesc{D_i}  \\
     \end{tabular}
@@ -40,7 +46,7 @@ Travel demand data was obtained and prepared as described in \Cref{appx:travel_d
     \label{fig:travelcard_boxplot}
 \end{figure}
 
-Intuitively travel demand also varies throughout the day as shown in~\Cref{fig:travelcard_hist}: On an average weekday, most passengers boardings are in the morning peek hours (7--9), and afternoon peek hours (15--18). It suggest that the weekdays seem to behave vary similar between early morning and work hours (e.g.\ 2--16), except Friday, which looks to have more demand in general. After 16 the weekdays seem to deviate from each a bit more. It also suggest that weekends has a clearly different demand pattern, with much more demand in the night hours.
+Intuitively travel demand also varies throughout the day as shown in~\Cref{fig:travelcard_hist}: On an average weekday, most passengers boardings are in the morning peek hours (7--9), and afternoon peek hours (15--18). It suggest that the weekdays seem to behave very similar between early morning and work hours (e.g.\ 2--16), except Friday, which looks to have more demand in general. After 16 the weekdays seem to deviate from each other a bit more. It also suggest that weekends has a clearly different demand pattern, with much more demand in the night hours.
 \begin{figure}[!ht]
     \center
     \input{../plots/travelcard_hist.tex}

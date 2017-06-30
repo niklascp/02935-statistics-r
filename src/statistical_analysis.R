@@ -120,7 +120,7 @@ traveldemand$re <- traveldemand$D_error / traveldemand$D_pred
 
 quantiles <- quantile(traveldemand$re, c(.05, .95))
 
-traveldemand[, demand_group := factor(cut(re, quantile(traveldemand$re, c(0, 1/3, 2/3, 1))), labels = c('Low', 'Normal', 'High'))]
+traveldemand[, demand_group := factor(cut(re, quantile(traveldemand$rea, c(0, 1/3, 2/3, 1))), labels = c('Low', 'Normal', 'High'))]
 
 traveldemand$rea <- traveldemand$re
 traveldemand[re < quantiles[1], rea := quantiles[1]]
@@ -149,6 +149,16 @@ p_cond <- ggplot(data, aes(cond, rea, group = cond)) +
 tikz(file = "../plots/cor_cond.tex", width = 6, height = 3, timestamp = FALSE)
 print(p_cond)
 dev.off()
+
+mean_cond_tab <- xtable(data[!is.na(cond), ][, .("Mean. $\\mathit{re}_i$" = paste0(format(round(mean(rea) * 100, 1), nsmall = 1), '\\%')), by = cond])
+colnames(mean_cond_tab)[1] <- paste0('$\\mathit{', colnames(mean_cond_tab)[1], '}$')
+align(mean_cond_tab) <- 'llr'
+print((mean_cond_tab),
+      type = "latex",
+      file = "../tables/mean_cond_tab.tex",
+      hline.after = c(0,0:nrow(mean_cond_tab)),
+      sanitize.text.function=function(x){x},
+      include.rownames = FALSE)
 
 # Anova of discrete variables
 anova(lm(rea ~ cond, data = data))
@@ -179,21 +189,44 @@ tikz(file = "../plots/cor_temp.tex", width = 6, height = 3, timestamp = FALSE)
 print(p_temp)
 dev.off()
 
+p_ws <- ggplot(data, aes(ws, rea)) +
+  geom_smooth() +
+  labs(x = 'Wind speed, $\\mathit{ws}$', y = 'Relative error, $\\mathit{re}$') +
+  theme_bw() +
+  theme(
+    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
+    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
+  )
+
+tikz(file = "../plots/cor_ws.tex", width = 6, height = 3, timestamp = FALSE)
+print(p_ws)
+dev.off()
+
 # ----------------
 # PCA WITH DUMMIES
 # ----------------
 
-dummy_dt <- dummy(data$dt, sep = ':')
-dummy_peek <- dummy(data$peek, sep = ':')
 dummy_cond <- dummy(data$cond, sep = ':')[,-8] # omit NA condition
 
-data_dummy <- na.omit(cbind(data[, !c("t", "dt", "re", "rea", "peek", "cond"), with=FALSE], dummy_dt, dummy_peek, dummy_cond))
-data_dummy_reduced <- na.omit(cbind(data[, !c("t", "dt", "peek", "demand_group", "cond"), with=FALSE], dummy_cond))
+data_dummy <- na.omit(cbind(data[, !c("t", "dt", "peek", "demand_group", "cond"), with=FALSE], dummy_cond))
 
-data_dummy_scaled <- scale(data_dummy_reduced[, !c("re", "rea"), with=FALSE])
+data_dummy_scaled <- scale(data_dummy[, !c("re", "rea"), with=FALSE])
 pca <- stats::prcomp(data_dummy_scaled)
 
-ps <- ggbiplots(pca, data_dummy_reduced$rea, 5)
+pca_screeplot <- ggscreeplot(pca) +
+  theme_bw() +
+  theme(
+    axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
+    axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
+  )
+
+pca_screeplot
+
+tikz(file = "../plots/pca_screeplot.tex", width = 6, height = 3, timestamp = FALSE)
+print(pca_screeplot)
+dev.off()
+
+ps <- ggbiplots(pca, data_dummy$rea, 5)
 pdf(paste0("../plots/pca_loadings.pdf"), width=9, height=12)
 do.call("grid.arrange", c(ps, ncol=2))
 dev.off()
@@ -202,7 +235,7 @@ dev.off()
 # SVM WITH DUMMIES
 # ----------------
 
-data_dummy_svm <- data_dummy[, !c("cond:NA"), with=FALSE]
+data_dummy_svm <- na.omit(cbind(data[, !c("t", "dt", "re", "rea"), with=FALSE], dummy_dt))
 
 train_dummy_svm <- data_dummy_svm[1:(.8 * nrow(data_dummy_svm))]
 test_dummy_svm <- data_dummy_svm[(.8 * nrow(data_dummy_svm)):nrow(data_dummy_svm)]
@@ -213,19 +246,19 @@ test_res <- predict(model, newdata = test_dummy_svm)
 
 test_comp <- data.table(demand_group = test_dummy_svm$demand_group, demand_group_pred = test_res)
 
-#test_comp <- data.table(demand_group = train_dummy_svm$demand_group, demand_group_pred = train_res)
-
 a <- test_comp[, .N, by = list(demand_group_pred, demand_group)]
 b <- a[, .(demand_group, freq = N/sum(N)), by = demand_group_pred]
 
 ggplot(b, aes(demand_group_pred, demand_group, fill = freq)) +
   geom_tile() +
-  geom_text(aes(label=paste0(format(round(100.0 * freq, 1), format = 'f', nsmall = 1), "%"))) +
+  geom_text(aes(label=paste0(format(round(100.0 * freq, 1), format = 'f', nsmall = 1), "\\%"))) +
   scale_fill_gradient(low = "white", high = "red") + 
-  #labs(x = "Estimated Travel Demand )
+  labs(x = "Predicted Travel Demand Category", y = "True Travel Demand Category") +
   theme_bw() +
   theme(
     axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
     axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
-  )
-  
+  ) + 
+  ggsave("../plots/svm_prediction.pdf", width = 4, height = 4, units = "in")
+
+

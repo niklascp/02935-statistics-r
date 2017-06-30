@@ -9,8 +9,6 @@ traveldemand <- prep_traveldemand()
 
 write_example_traveldemand(traveldemand)
 
-traveldemand <- transform_traveldemand(traveldemand)
-
 # -----------------
 # DESCRIPTIVE PLOTS
 # -----------------

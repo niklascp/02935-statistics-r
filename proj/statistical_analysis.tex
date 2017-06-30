@@ -4,22 +4,32 @@
 In the previous sections the two data sets have been presented, including descriptive statistics of each of them. Furthermore a normalized measure for travel demand deviations from the normal pattern, \gls{re_i}, has been modeled and checked. With this, the statistical analysis of the impact of weather on travel demand can be conducted.
 
 \subsection{Merge of weather and travel demand}
-Recall from \Cref{ch:desc_weather} that the weather time series have three time steps within each hour, while travel demand has only one measurement per hour. In order to merge the two data sets the weather time series is aggregated to the same granularity as described in \Cref{eq:weather_aggr}.
+Recall from \Cref{ch:desc_weather} that the weather time series have three time steps within each hour, while travel demand has only one measurement per hour. In order to merge the two data sets the weather time series is aggregated to the same granularity as described in \Cref{eq:temp_i,eq:pptn_i,eq:rh_i,eq:ws_i,eq:cond_i}.
 \begin{align}
-	\mathit{temp}_i &= \mathrm{mean}(\mathit{temp}_j, \mathit{temp}_{j + 1}, \mathit{temp}_{j + 2}) &\text{where} \; t_i = t_j \\
-	\mathit{pptn}_i &= \mathrm{max}(\mathit{pptn}_j, \mathit{pptn}_{j + 1}, \mathit{pptn}_{j + 2}) &\text{where} \; t_i = t_j \\
-	\mathit{rh}_i &= \mathrm{max}(\mathit{rh}_j, \mathit{rh}_{j + 1}, \mathit{rh}_{j + 2}) &\text{where} \; t_i = t_j \\
-	\mathit{ws}_i &= \mathrm{max}(\mathit{ws}_j, \mathit{ws}_{j + 1}, \mathit{ws}_{j + 2}) &\text{where} \; t_i = t_j \\
+	\mathit{temp}_i &= \mathrm{mean}(\mathit{temp}_j, \mathit{temp}_{j + 1}, \mathit{temp}_{j + 2}) &\text{where} \; t_i = t_j 
+	\label{eq:temp_i} \\
+	\mathit{pptn}_i &= \mathrm{max}(\mathit{pptn}_j, \mathit{pptn}_{j + 1}, \mathit{pptn}_{j + 2}) &\text{where} \; t_i = t_j 
+	\label{eq:pptn_i} \\
+	\mathit{rh}_i &= \mathrm{max}(\mathit{rh}_j, \mathit{rh}_{j + 1}, \mathit{rh}_{j + 2}) &\text{where} \; t_i = t_j 
+	\label{eq:rh_i} \\
+	\mathit{ws}_i &= \mathrm{max}(\mathit{ws}_j, \mathit{ws}_{j + 1}, \mathit{ws}_{j + 2}) &\text{where} \; t_i = t_j
+	\label{eq:ws_i} \\	
 	\mathit{cond}_i &= \mathrm{max}(\mathit{cond}_j, \mathit{cond}_{j + 1}, \mathit{cond}_{j + 2}) &\text{where} \; t_i = t_j 
-	\label{eq:weather_aggr}
+	\label{eq:cond_i}
 \end{align}
 
 \subsection{Univariate analysis}
 Before going into the multivariate analysis, it is desirable to look for  of the correlations between the pairs of variables. \Cref{fig:cor_matrix} shows visualizes the correlation matrix of the numeric variables (e.g.\ without weather condition, \gls{cond_i}, day type, \gls{daytype_i}, and peek class, \gls{peek_i}). There are no clear linear correlations between pairs that surfaces, only a week correlation between wind speed, \gls{ws_i}, and \gls{re_i}, and a even more week correlation between temperature, \gls{temp_i}, and \gls{re_i}. 
 
-The discrete variables (weather condition, \gls{cond_i}, day type, \gls{daytype_i}, and peek class, \gls{peek_i}) is investigated using ANOVA to test whether they contribute to \gls{re_i}. It is found with strong evidence ($F = 38.147, p < 0.001$) that the weather condition is influencing the travel demand, and the relationship is shown in \Cref{fig:cor_cond}. This is of cause not that surprising, and expected that rain impacts with an increased travel demand. On the other hand is cannot been shown that day type, \gls{daytype_i}, and peek class, \gls{peek_i}, has influence ($F =  0.1395, p = 0.709$ respectable $F =  0.0463, p = 0.955$), i.e.\ the weather condition impacts similarly regardless of people are on their way to work or using public transport for leisure rides, which is interesting.
+The discrete variables (weather condition, \gls{cond_i}, day type, \gls{daytype_i}, and peek class, \gls{peek_i}) is investigated using ANOVA to test whether they contribute to \gls{re_i}. It is found with strong evidence ($F = 38.147$, $p < 0.001$) that the weather condition is influencing the travel demand, and the relationship is shown in \Cref{fig:cor_cond}. This is of cause not that surprising, and expected that rain impacts with an increased travel demand, but it is also possible to quantify the impact: E.g.\ heavy rain increases travel demand on average with over 12\%, while light rain and rain increases with approx. 3\% and 6\%. as shown in \Cref{tab:mean_cond_tab}. On the other hand is cannot been shown that day type, \gls{daytype_i}, and peek class, \gls{peek_i}, has influence ($F =  0.1395$, $p = 0.709$ respectable $F =  0.0463$, $p = 0.955$), i.e.\ the weather condition impacts similarly regardless of people are on their way to work or using public transport for leisure rides, which is interesting.
+\begin{table}[!ht]
+    \center
+    \input{../tables/mean_cond_tab.tex}
+    \caption{Mean. deviations in travel demand, \gls{re_i} by different weather condition.}
+    \label{tab:mean_cond_tab}
+\end{table}
 
-For the continues variables, selected relationships are plotted, i.e.\ $\gls{re_i} \sim \gls{temp_i}$ and $\gls{re_i} \sim \gls{ws_i}$ and as shown in \Cref{fig:cor_temp,fig:cor_ws}, where the band indicates a 95\% confidence interval of the mean. For instance the impact of temperature indicates that smaller freezing temperatures (i.e. between $-5^{\circ}$ to $0^{\circ}$) impacts with a increased travel demand, while more freezing temperatures (i.e. below $-5^{\circ}$) impacts with a reduced travel demand. Likewise \Cref{fig:cor_ws} suggest that there exists an almost sigmoid shaped jump around 18 km/h, where the travel demand deviations shift from decrease to increased very rapid. These examples is evidence that the impact of weather on travel demand is mush more complex than can be explained by univariate analysis, and supports that a multivariate analysis is required to explain the relationship.
+For the continues variables, selected relationships are plotted, i.e.\ $\gls{re_i} \sim \gls{temp_i}$ and $\gls{re_i} \sim \gls{ws_i}$ and as shown in \Cref{fig:cor_temp,fig:cor_ws}, where the band indicates a 95\% confidence interval of the mean. For instance the impact of temperature indicates that smaller freezing temperatures (i.e. between $-5^{\circ}$ to $0^{\circ}$) impacts with a increased travel demand, while more freezing temperatures (i.e. below $-5^{\circ}$) impacts with a reduced travel demand. Likewise \Cref{fig:cor_ws} suggest that there exists an almost sigmoid shaped jump around 18 km/h, where the travel demand deviations shift from decrease to increased very rapid. These examples is evidence that the impact of weather on travel demand is more complex than can be explained by univariate analysis, and supports that a multivariate analysis is required to explain the relationship.
 \vspace{-3em}
 \begin{figure}[!ht]
     \center
@@ -37,7 +47,6 @@ For the continues variables, selected relationships are plotted, i.e.\ $\gls{re_
     \label{fig:cor_cond}
 \end{figure}
 \vspace{-1em}
-\clearpage
 
 \begin{figure}[!ht]
     \center
@@ -55,13 +64,13 @@ For the continues variables, selected relationships are plotted, i.e.\ $\gls{re_
 \end{figure}
 
 \subsection{Principal component analysis}
-As Principal component analysis (PCA) only works on continues variables a series of dummy-variables is introduced for the discrete variable weather condition \gls{cond_i}, while day type, \gls{daytype_i}, and peek class, \gls{peek_i} is dropped since their contribution is non-significant cf. previous section. The PCA is only done on the weather data, and loadings is then colored by travel demand deviation, \gls{re_i}.
+As  \emph{Principal component analysis} (PCA) only works on continues variables a series of dummy-variables is introduced for the discrete variable weather condition \gls{cond_i}, while day type, \gls{daytype_i}, and peek class, \gls{peek_i} is dropped since their contribution is non-significant cf. previous section. The PCA is only done on the weather data, and loadings is then colored by travel demand deviation, \gls{re_i}.
 
 The dummy transformation yields a data set of total of 11 variables, which is mean centered and scaled before PCA is applied. The scree plot of the resulting 11 principal components (PC) is shown \Cref{fig:pca_screeplot}. Already from the scree plot it is evident, that the total explained variance increases quite slowly as principal components are included. Thus it suggest that the weather data set is not modeled well by the hyper-projection onto the reduced space of the PCA.
 
 Nevertheless the loadings plots is colored cf.\ \gls{re_i} and inspected. Since comparing all 11 principal components would yield 55 loadings plots, only the first 5 principal components are selected, resulting in the 10 loadings plots shown in \Cref{fig:pca_loadings}, where a blue color corresponds to a positive value of \gls{re_i} (increased demand), and red to a negative value of \gls{re_i} (decreased demand).
 
-It is hard to argue about any clear patterns in the loadings plots. The clusters formed are in all cases due to the dummy variables. Even though clusters of different kind of rains, e.g.\ as seen in PC3/PC5-plot, are more blue then the cloudy and overcast clusters, it really does not capture the multivariate correlation better than the boxplot in~\Cref{fig:cor_cond}. PCA has only been tried without the dummy-variables, but it yields only cloudy loadings plot with just as little separation between increased and decreased demand.
+It is hard to argue about any clear patterns in the loadings plots. The clusters formed are in all cases due to the dummy variables. Even though clusters of different kind of rains, e.g.\ as seen in PC3/PC5-plot, are more blue then the cloudy and overcast clusters, it really does not capture the multivariate correlation better than the boxplot in~\Cref{fig:cor_cond}. PCA has also been tried without the dummy-variables, but it yields only cloudy loadings plot with just as little separation between increased and decreased demand.
 
 For this reason it is argued that PCA is not an appropriate method for the multivariate analysis.
 \begin{figure}[!ht]
@@ -79,4 +88,16 @@ For this reason it is argued that PCA is not an appropriate method for the multi
 \end{figure}
 \clearpage
 
-\subsection{Support vector regression (SVR)}
+\subsection{Support vector machine}
+In order to handle the original goal of presenting an prediction model for travel demand cf.\ \Cref{ch:objective}, a simple \emph{Support vector machine} (SVM) was trained. Since SVM is a supervised learning model, it should be able to re-project the weather data for the use of travel demand prediction to a larger degree than the PCA was able to.
+
+For simplification the travel demand deviation was divided into 3 categories by the $^1/_3$ and $^2/_3$ quantiles of \gls{re_i}. The resulting tree groups was named Low ($\gls{re_i} < -5.5\%$), Normal ($-5.5\% <= \gls{re_i} < 4.9\%$) and High ($4.9\% <= \gls{re_i}$). The dataset is splitted in to a train and test dataset (first 80\% of data i used for training, the last 20\% for testing). The SVM is than trained to predict the demand category based on the training weather data as input (again discrete values are replaced with dummy variables), and tested on the test data set.
+
+The results is shown in \Cref{fig:svm_prediction}, and it is seen that in all tree cases the model is able to predict unseen travel demand to the right group with $>40\%$ accuracy, compared to $\approx33\%$ of pure random classification. There are however significant errors, which cloud be an effect of travel demand deviation caused by other external factors than weather (e.g.\ events), or that the model can be improved further.
+
+\begin{figure}[!ht]
+    \center
+    \includegraphics{../plots/svm_prediction}
+    \caption{SVM prediction accuracy.}
+    \label{fig:svm_prediction}
+\end{figure}
