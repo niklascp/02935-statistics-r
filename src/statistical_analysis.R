@@ -251,7 +251,7 @@ b <- a[, .(demand_group, freq = N/sum(N)), by = demand_group_pred]
 
 ggplot(b, aes(demand_group_pred, demand_group, fill = freq)) +
   geom_tile() +
-  geom_text(aes(label=paste0(format(round(100.0 * freq, 1), format = 'f', nsmall = 1), "\\%"))) +
+  geom_text(aes(label=paste0(format(round(100.0 * freq, 1), format = 'f', nsmall = 1), "%"))) +
   scale_fill_gradient(low = "white", high = "red") + 
   labs(x = "Predicted Travel Demand Category", y = "True Travel Demand Category") +
   theme_bw() +
@@ -259,6 +259,6 @@ ggplot(b, aes(demand_group_pred, demand_group, fill = freq)) +
     axis.title.x=element_text(size = rel(0.8), margin=margin(10,0,0,0)),
     axis.title.y=element_text(size = rel(0.8), margin=margin(0,10,0,0))
   ) + 
-  ggsave("../plots/svm_prediction.pdf", width = 4, height = 4, units = "in")
+  ggsave("../plots/svm_prediction.pdf", width = 5, height = 4, units = "in")
 
 
